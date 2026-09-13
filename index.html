@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>OGCx voyage — explorateur (v0.3.0)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root, html[data-theme="darkblue"] {
+  --bg: #0b1014; --bg2: #121a21; --bg3: #18232c; --line: #2a3a46;
+  --text: #e7eef3; --muted: #8aa0ae; --accent: #e2b657; --accent2: #6fc3b2;
+  --danger: #e07a6a; --ok: #7dce8a; --row: 34px; --aside: 280px; --detail: 400px;
+  --grid: 28px 118px minmax(140px,1.4fr) 88px 92px minmax(120px,1fr);
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --head: #0e161c; --rowline: #1b2831; --hover: #1a2832; --sel: #2a2414;
+  --btn-on-bg: #163226; --btn-on-bd: #3e8a5c;
+  --btn-pri-bg: #3a2f14; --btn-pri-bd: #6d5722;
+  --track: #1c2a33; --prose: #d5e0e7; --sheet: rgba(6,10,14,.55);
+  --official: #e89a3a; --official-h: #ffb24d; --grab: #3a4c58;
+  --sel-glow: rgba(226,182,87,.35);
+}
+html[data-theme="lightred"] {
+  --bg: #ffffff; --bg2: #fff7f7; --bg3: #f4e8e8; --line: #d9c4c4;
+  --text: #1a1414; --muted: #6b4f4f; --accent: #c8102e; --accent2: #8b1538;
+  --danger: #9b111e; --ok: #1b6e3a;
+  --head: #ffffff; --rowline: #eadada; --hover: #fff0f0; --sel: #ffe4e6;
+  --btn-on-bg: #e8f4ec; --btn-on-bd: #2d7a48;
+  --btn-pri-bg: #c8102e; --btn-pri-bd: #9b0c24;
+  --track: #f0e0e0; --prose: #2a1c1c; --sheet: rgba(80,20,20,.28);
+  --official: #c8102e; --official-h: #9b0c24; --grab: #d0b4b4;
+  --sel-glow: rgba(200,16,46,.28);
+}
+html[data-theme="lightred"] .btn.primary { color: #fff; }
+html { color-scheme: dark; }
+html[data-theme="lightred"] { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.35 var(--sans); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+#app { display: grid; grid-template-rows: 56px 1fr 28px; height: 100%; }
+header { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid var(--line); background: var(--bg2); min-height: 56px; }
+.kpis { display: flex; gap: 18px; font-variant-numeric: tabular-nums; margin-left: auto; white-space: nowrap; }
+.kpis .gap b { color: var(--danger); }
+header h1 { font-size: 14px; font-weight: 650; letter-spacing: .04em; margin: 0; text-transform: uppercase; white-space: nowrap; }
+header h1 span { color: var(--accent); }
+header h1 .ver { color: var(--muted); font-size: 10px; font-weight: 500; text-transform: none; letter-spacing: .02em; margin-left: 4px; }
+.grow { flex: 1; }
+.searchwrap { position: relative; display: flex; align-items: center; flex: 1; max-width: 520px; }
+.search { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 7px 34px 7px 10px; outline: none; }
+.search:focus { border-color: var(--accent); }
+#clearQ {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 22px; height: 22px; border: 0; background: transparent; color: var(--muted);
+  border-radius: 99px; line-height: 1; padding: 0; z-index: 2;
+}
+#clearQ:hover { color: var(--text); background: var(--bg3); }
+.btn { background: var(--bg3); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; color: var(--text); }
+.btn:hover { border-color: var(--accent); }
+.btn.on { background: var(--btn-on-bg); border-color: var(--btn-on-bd); color: var(--ok); }
+.btn.live.on { background: var(--btn-on-bg); border-color: var(--btn-on-bd); color: var(--ok); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--btn-pri-bg); border-color: var(--btn-pri-bd); color: var(--accent); }
+.btn.wide { display: block; width: 100%; margin: 6px 0; }
+.btn.danger { background: #3a1614; border-color: #8a3a32; color: #f0b2aa; }
+.iconbtn { min-width: 44px; height: 40px; padding: 0 8px; font-size: 18px; }
+.kpis { display: flex; gap: 18px; font-variant-numeric: tabular-nums; margin-left: auto; white-space: nowrap; }
+.kpis b { color: var(--accent); font-weight: 650; }
+main { display: grid; grid-template-columns: var(--aside) 6px 1fr 6px var(--detail); min-height: 0; }
+.split { background: var(--line); cursor: col-resize; }
+.split:hover, .split.hot { background: var(--accent); }
+aside.filters, .detail { background: var(--bg2); min-height: 0; display: flex; flex-direction: column; }
+aside.filters { border-right: 1px solid var(--line); }
+.detail { border-left: 1px solid var(--line); }
+.aside-body, #detailBody { flex: 1; overflow: auto; min-height: 0; }
+.pad { padding: 12px 14px; }
+h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.facet { margin-bottom: 14px; }
+label.chk { display: flex; gap: 8px; align-items: center; margin: 3px 0; cursor: pointer; }
+select.full, input.full { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; }
+.hint { color: var(--muted); font-size: 11px; margin: 6px 0 0; }
+#center { min-height: 0; height: 100%; overflow: hidden; display: grid; grid-template-rows: 1fr; }
+.cols, .row { display: grid; grid-template-columns: 28px 118px minmax(140px,1.4fr) 88px 92px minmax(120px,1fr); width: 100%; }
+.row.err { background: rgba(224,122,106,.16); }
+.row.err.on { background: rgba(224,122,106,.28); }
+.cols { height: 36px; align-items: stretch; background: var(--head); border-bottom: 1px solid var(--line); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; position: sticky; top: 0; z-index: 4; }
+.cols span, .row > span { padding: 0 8px; min-width: 0; overflow: hidden; white-space: nowrap; display: flex; align-items: center; }
+.cols span { cursor: pointer; }
+.cols span.active { color: var(--accent); }
+.cols span .arrow { margin-left: 4px; font-size: 10px; opacity: .85; }
+#scroller { overflow: auto; min-height: 0; height: 100%; }
+.row { height: var(--row); border-bottom: 1px solid var(--rowline); cursor: pointer; font-variant-numeric: tabular-nums; }
+.row:hover { background: var(--hover); }
+.row.on { background: var(--sel); }
+.row.fav { background: rgba(80,160,110,.22); }
+.row.fav.on { background: rgba(80,160,110,.34); }
+.row.add { background: rgba(80,160,110,.16); }
+.row.del { background: rgba(224,122,106,.16); }
+.row.mod { background: rgba(226,182,87,.14); }
+.row.err { background: rgba(224,122,106,.18); }
+.row.err:hover { background: rgba(224,122,106,.26); }
+.row.err.on { background: rgba(224,122,106,.32); }
+.row.err .c-total, .row.err .c-name { color: var(--danger); }
+.id { font-family: var(--mono); font-size: 11px; color: var(--accent2); }
+.money { justify-content: flex-end; font-family: var(--mono); font-size: 12px; }
+.detail-head { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); margin-bottom: 10px; flex-shrink: 0; }
+.detail-head h2 { margin: 0; }
+.detail-tools { margin-left: auto; display: flex; gap: 6px; }
+.dl { display: grid; grid-template-columns: 118px 1fr; gap: 4px 10px; margin: 8px 0 14px; }
+.dl dt { color: var(--muted); } .dl dd { margin: 0; word-break: break-word; }
+.prose { white-space: pre-wrap; color: var(--prose); }
+.bars { margin: 10px 0 14px; }
+.barline { display: grid; grid-template-columns: 90px 1fr 78px; gap: 6px; align-items: center; font-size: 11px; margin: 3px 0; }
+.barline i { display: block; height: 7px; background: var(--accent); opacity: .75; }
+.barline em { font-style: normal; color: var(--muted); text-align: right; font-family: var(--mono); }
+#center { position: relative; }
+#statsView { overflow: auto; min-height: 0; height: 100%; padding: 16px 18px 28px; background: var(--bg); }
+.stat-hero { display: flex; align-items: baseline; gap: 18px; margin: 0 0 16px; flex-wrap: wrap; }
+.stat-hero .big { font-size: 28px; font-weight: 650; color: var(--accent); font-variant-numeric: tabular-nums; font-family: var(--mono); }
+.stat-hero .sub { color: var(--muted); }
+.mix { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: var(--track); margin: 8px 0 14px; }
+.mix > i { display: block; height: 100%; }
+.mix-leg { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 18px; font-size: 11px; color: var(--muted); }
+.mix-leg b { color: var(--text); font-weight: 600; margin-right: 4px; font-family: var(--mono); }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.stat-card { background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 10px; }
+.stat-card h3 { margin: 0 0 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.srow { display: grid; grid-template-columns: 22px minmax(0,1fr) 86px; gap: 6px 8px; align-items: center; margin: 0 0 7px; font-size: 12px; }
+.srow .rk { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+.srow .nm { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; }
+.srow .nm:hover { color: var(--accent); }
+.srow .am { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text); }
+.sbar { grid-column: 2 / -1; height: 5px; background: var(--track); border-radius: 99px; overflow: hidden; }
+.sbar i { display: block; height: 100%; border-radius: 99px; }
+footer { display: flex; align-items: center; gap: 12px; padding: 0 14px; border-top: 1px solid var(--line); background: var(--bg2); color: var(--muted); font-size: 11px; }
+#prog { height: 4px; background: var(--track); width: min(280px, 30vw); flex-shrink: 0; } #prog > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .12s linear; }
+footer #status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.official { display: inline-flex; align-items: center; gap: 6px; color: var(--official); text-decoration: none; font-weight: 600; margin: 8px 0 12px; font-size: 13px; }
+.official:hover { color: var(--official-h); text-decoration: underline; }
+.range { width: 100%; accent-color: var(--accent); }
+.cfg-row { margin: 0 0 16px; }
+.cfg-row .val { font-family: var(--mono); color: var(--accent); }
+.hidden { display: none !important; }
+.simple-only { display: none; }
+.empty { padding: 40px 16px; color: var(--muted); text-align: center; }
+.drop { border: 1px dashed var(--line); border-radius: 6px; padding: 10px; text-align: center; color: var(--muted); background: var(--bg); margin-bottom: 10px; }
+.drop.hot { border-color: var(--accent); color: var(--accent); }
+.sheet { position: fixed; inset: 0; z-index: 40; background: var(--sheet); display: none; justify-content: flex-end; }
+.sheet.open { display: flex; }
+.sheet .panel { width: min(420px,100%); background: var(--bg2); border-left: 1px solid var(--line); display: flex; flex-direction: column; }
+.sheet .panel-h { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.sheet .panel-b { overflow: auto; flex: 1; padding: 12px 14px; }
+@media (max-width: 1200px) {
+  main { grid-template-columns: var(--aside) 6px 1fr; }
+  .split.d, .detail { display: none; }
+  .detail.open { display: flex; position: absolute; inset: 56px 0 28px auto; width: min(var(--detail),100%); z-index: 8; }
+}
+body.simple .simple-only { display: inline-flex; }
+body.simple header h1, body.simple header .desk-only, body.simple header .grow { display: none !important; }
+body.simple #app { grid-template-rows: auto 1fr; }
+body.simple footer { display: none; }
+body.simple header {
+  display: grid;
+  grid-template-columns: 40px 1fr 44px 44px 44px 44px 44px 44px;
+  grid-template-areas:
+    "s kpis stats audit filt fav file cfg"
+    "search search search qf qf qf qf qf";
+  padding: 8px 8px calc(8px + env(safe-area-inset-top));
+  gap: 6px;
+  background: var(--head);
+  min-height: 0;
+  position: sticky; top: 0; z-index: 30;
+}
+body.simple #simpleBtn { grid-area: s; }
+body.simple .kpis { grid-area: kpis; justify-self: center; font-size: 12px; margin-left: 0; }
+body.simple .kpis b { font-size: 15px; }
+body.simple header .kpis .desk-only { display: flex !important; }
+body.simple header .gap { display: none !important; }
+body.simple #statsSimpleBtn { grid-area: stats; display: inline-flex !important; }
+body.simple #auditSimpleBtn { grid-area: audit; display: inline-flex !important; }
+body.simple #searchMenuBtn { grid-area: filt; }
+body.simple #favSimpleBtn { grid-area: fav; display: inline-flex !important; }
+body.simple #fileMenuBtn { grid-area: file; }
+body.simple #cfgBtn { grid-area: cfg; display: inline-flex !important; }
+body.simple #searchwrap { grid-area: search; display: flex !important; width: 100%; max-width: none; }
+body.simple .search { width: 100%; min-height: 40px; border-radius: 10px; font-size: 16px; }
+body.simple #quickFilters {
+  grid-area: qf; display: flex !important; justify-content: flex-end; align-items: center; gap: 6px;
+}
+body.simple #quickFilters select {
+  width: auto; min-width: 0; max-width: 42vw; height: 40px; border-radius: 10px; padding: 0 8px; font-size: 12px;
+}
+body.simple main { grid-template-columns: 1fr; }
+body.simple aside.filters, body.simple .split { display: none !important; }
+body.simple #cols { display: none; }
+.simple-cols { display: none; }
+body.simple #colsSimple {
+  display: grid;
+  grid-template-columns: 22px minmax(0,1fr) 88px 110px;
+  height: 32px; position: sticky; top: 0; z-index: 4;
+  background: var(--head); border-bottom: 1px solid var(--line);
+  font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+}
+body.simple #colsSimple span { cursor: pointer; padding: 0 12px; align-items: center; display: flex; }
+body.simple #colsSimple span[data-k="start_date"],
+body.simple #colsSimple span[data-k="total"] { justify-content: flex-end; }
+body.simple #colsSimple span.active { color: var(--accent); }
+body.simple .row {
+  display: grid; grid-template-columns: 22px minmax(0,1fr) auto;
+  grid-template-rows: auto auto;
+  height: auto; min-height: 62px; margin: 5px 8px; padding: 8px 12px 8px 8px;
+  gap: 1px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg2);
+  position: relative;
+  align-items: center;
+}
+body.simple .row.fav { border-color: #3e8a5c; background: rgba(80,160,110,.16); }
+body.simple .row.on {
+  background: var(--sel);
+  border-color: var(--accent);
+  box-shadow: inset 4px 0 0 var(--accent), 0 0 0 1px var(--sel-glow);
+}
+body.simple .row.fav.on {
+  background: rgba(80,160,110,.28);
+  border-color: var(--accent);
+  box-shadow: inset 4px 0 0 var(--accent), 0 0 0 1px var(--sel-glow);
+}
+body.simple .row.on .c-name { color: var(--accent); }
+body.simple .row.err {
+  background: rgba(224,122,106,.20);
+  border-color: var(--danger);
+}
+body.simple .row.err .c-name,
+body.simple .row.err .c-total { color: var(--danger); }
+body.simple .row.err.on {
+  background: rgba(224,122,106,.32);
+  border-color: var(--danger);
+  box-shadow: inset 4px 0 0 var(--danger), 0 0 0 1px rgba(224,122,106,.4);
+}
+body.simple .row.err.on .c-name { color: var(--danger); }
+body.simple .c-star {
+  display: flex; grid-column: 1; grid-row: 1 / span 2;
+  justify-content: center; align-items: center;
+  color: var(--ok); font-size: 14px; line-height: 1;
+  position: static; margin: 0; right: auto; bottom: auto;
+}
+body.simple .c-ref { display: none; }
+body.simple .c-name { grid-column: 2; grid-row: 1; font-weight: 600; font-size: 14px; line-height: 1.2; }
+body.simple .c-start { grid-column: 3; grid-row: 1; justify-content: flex-end; color: var(--muted); font-size: 12px; }
+body.simple .c-total { grid-column: 3; grid-row: 2; justify-content: flex-end; font-size: 16px; font-weight: 700; color: var(--accent); }
+body.simple .c-dest { grid-column: 2; grid-row: 2; color: var(--muted); font-size: 12px; padding-right: 8px; }
+.c-gap { font-weight: 500; font-size: 11px; color: var(--danger); margin-left: 4px; font-variant-numeric: tabular-nums; }
+body.simple .c-gap { font-size: 11px; display: block; text-align: right; margin: 1px 0 0; }
+body.simple .row.err,
+body.simple .row.err.fav,
+body.simple .row.err:hover {
+  background: rgba(224,122,106,.22);
+  border-color: var(--danger);
+}
+body.simple .row.err .c-name,
+body.simple .row.err .c-total,
+body.simple .row.err.on .c-name,
+body.simple .row.err.on .c-total { color: var(--danger); }
+body.simple .row.err.on,
+body.simple .row.err.fav.on {
+  background: rgba(224,122,106,.34);
+  border-color: var(--danger);
+  box-shadow: inset 4px 0 0 var(--danger), 0 0 0 1px rgba(224,122,106,.45);
+}
+body.simple .detail { display: none; }
+body.simple .detail.open {
+  display: flex; position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+  width: 100%; height: 50vh; max-height: 50vh; z-index: 20;
+  border: 0; border-top: 1px solid var(--line);
+  border-radius: 14px 14px 0 0; box-shadow: 0 -12px 40px rgba(0,0,0,.45);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+body.simple .detail.open.full { height: 88vh; max-height: 88vh; z-index: 20; }
+body.simple.fiche-open #scroller, body.simple.fiche-open #statsView { padding-bottom: calc(50vh + 10px); }
+body.simple.fiche-open.fiche-full #scroller, body.simple.fiche-open.fiche-full #statsView { padding-bottom: calc(88vh + 10px); }
+body.simple .detail-head { position: sticky; top: 0; background: var(--bg2); z-index: 2; padding-top: 2px; flex-wrap: wrap; }
+body.simple .grab { width: 100%; height: 16px; background: transparent; order: -1; flex-basis: 100%; }
+body.simple .grab::after { content: ""; display: block; width: 40px; height: 5px; border-radius: 99px; background: var(--grab); margin: 6px auto 0; }
+body.simple .detail h3 { font-size: 18px; }
+body.simple .iconbtn { min-width: 44px; height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; }
+body.simple .iconbtn svg { width: 20px; height: 20px; display: block; }
+body.simple #rows { padding-bottom: 24px; }
+body.simple .sheet {
+  align-items: flex-start;
+  justify-content: stretch;
+  z-index: 50;
+  padding-top: env(safe-area-inset-top);
+}
+body.simple .sheet .panel {
+  width: 100%; max-height: 72vh;
+  border-left: 0; border-bottom: 1px solid var(--line); border-top: 0;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.45);
+}
+#expandDetail { display: none; }
+body.simple #expandDetail { display: inline-flex; }
+.iconbtn svg { width: 18px; height: 18px; }
+.theme-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.theme-card {
+  display: flex; flex-direction: column; gap: 6px; align-items: stretch;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px;
+  text-align: left; color: var(--text);
+}
+.theme-card:hover { border-color: var(--accent); }
+.theme-card.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.theme-card .sw { height: 28px; border-radius: 4px; border: 1px solid var(--line); }
+.theme-card .sw.darkblue { background: linear-gradient(90deg, #0b1014 40%, #e2b657 40% 55%, #121a21 55%); }
+.theme-card .sw.lightred { background: linear-gradient(90deg, #ffffff 40%, #c8102e 40% 55%, #fff7f7 55%); }
+.theme-card b { font-size: 12px; }
+.theme-card span { font-size: 11px; color: var(--muted); }
+@media print {
+  html, body, #app { background: #fff !important; color: #111 !important; height: auto; }
+  header, footer, aside.filters, .split, .sheet, .iconbtn, .btn, #quickFilters { display: none !important; }
+  main { display: block; }
+  #scroller, #statsView, .detail { position: static !important; height: auto !important; overflow: visible !important; background: #fff !important; color: #111 !important; }
+  .row, .cols { background: #fff !important; color: #111 !important; border-color: #ccc !important; }
+  .row.err { background: #f8e8e8 !important; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="btn iconbtn" id="simpleBtn" title="Mode simple">S</button>
+    <h1>OGC<span>x</span> voyage <span class="ver">v0.3.0</span></h1>
+    <div class="searchwrap" id="searchwrap">
+      <input class="search" id="q" placeholder="Nom, destination, réf…" autocomplete="off">
+      <button type="button" id="clearQ" class="hidden" title="Effacer">×</button>
+    </div>
+    <div class="simple-only" id="quickFilters">
+      <select class="full" id="sortQuick" title="Tri">
+        <option value="total desc" selected>montant ↓</option>
+        <option value="total asc">montant ↑</option>
+        <option value="start_date desc">date ↓</option>
+        <option value="start_date asc">date ↑</option>
+        <option value="name asc">nom A–Z</option>
+        <option value="name desc">nom Z–A</option>
+      </select>
+      <select class="full" id="yearQuick" title="Année">
+        <option value="">année</option>
+        <option>2026</option><option>2025</option><option>2024</option>
+        <option>2023</option><option>2022</option><option>2021</option>
+        <option>2020</option><option>2019</option>
+      </select>
+    </div>
+    <button class="btn iconbtn simple-only" id="statsSimpleBtn" title="STATS" aria-label="Stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+    </button>
+    <button class="btn iconbtn simple-only" id="auditSimpleBtn" title="AUDIT" aria-label="Audit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v6c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+    </button>
+    <button class="btn iconbtn simple-only" id="searchMenuBtn" title="Filtres">⌕</button>
+    <button class="btn iconbtn simple-only" id="favSimpleBtn" title="Favoris">★</button>
+    <button class="btn iconbtn simple-only" id="fileMenuBtn" title="Fichiers">☰</button>
+    <button class="btn desk-only" id="statsBtn">STATS</button>
+    <button class="btn desk-only" id="auditBtn">AUDIT</button>
+    <button class="btn desk-only" id="langBtn">FR / EN</button>
+    <button class="btn desk-only" id="favOnlyBtn">Favoris</button>
+    <button class="btn desk-only" id="diffBtn">Diff</button>
+    <button class="btn desk-only" id="csvBtn">CSV filtré</button>
+    <div class="kpis">
+      <div><b id="kpiN">—</b> <span id="labN">notes</span></div>
+      <div class="desk-only"><b id="kpiSum">—</b> <span id="labSum">chargé</span></div>
+      <div class="desk-only gap"><b id="kpiErr">—</b> <span id="labErr">écarts</span></div>
+    </div>
+    <button class="btn iconbtn" id="cfgBtn" title="Config" aria-label="Config">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.6.9 1 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+  <main>
+    <aside class="filters pad" id="aside">
+      <div class="aside-body">
+        <div id="filterBlock">
+        <div class="facet">
+          <h2 id="hSrc">Source</h2>
+          <div id="srcLab" class="hint">Live · DataStore open.canada.ca</div>
+        </div>
+        <div class="facet">
+          <h2 id="hField">Chercher dans</h2>
+          <select class="full" id="field">
+            <option value="name">nom</option>
+            <option value="destination_en">destination</option>
+            <option value="purpose_en">motif</option>
+            <option value="ref_number">référence</option>
+            <option value="owner_org_title">organisation</option>
+            <option value="title_en">titre</option>
+          </select>
+        </div>
+        <div class="facet">
+          <h2 id="hSort">Tri</h2>
+          <select class="full" id="sort">
+            <option value="total desc" selected>montant ↓</option>
+            <option value="total asc">montant ↑</option>
+            <option value="start_date desc">départ récent</option>
+            <option value="start_date asc">départ ancien</option>
+            <option value="name asc">nom A–Z</option>
+            <option value="name desc">nom Z–A</option>
+            <option value="dest asc">destination A–Z</option>
+            <option value="dest desc">destination Z–A</option>
+            <option value="ref_number desc">réf ↓</option>
+          </select>
+        </div>
+        <div class="facet">
+          <h2 id="hYear">Année (départ)</h2>
+          <select class="full" id="year">
+            <option value="">toutes</option>
+            <option>2026</option><option>2025</option><option>2024</option>
+            <option>2023</option><option>2022</option><option>2021</option>
+            <option>2020</option><option>2019</option>
+          </select>
+        </div>
+        <div class="facet">
+          <h2 id="hGrp">Groupe</h2>
+          <select class="full" id="group">
+            <option value="">tous</option>
+            <option value="SLE">SLE</option>
+          </select>
+        </div>
+        <div class="facet">
+          <h2 id="hErr">Écarts</h2>
+          <label class="chk"><input type="checkbox" id="errOnly"><span id="labErrOnly">écarts seulement</span></label>
+        </div>
+        <div class="facet" id="facetOrg"></div>
+        </div>
+        <div class="drop" id="drop">
+          Dépose une capture CSV ici
+          <div class="stack" style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+            <button class="btn wide primary" id="loadAllBtn">Tout charger</button>
+            <button class="btn wide" id="loadOfficial">Télécharger officiel</button>
+            <button class="btn wide" id="pickBtn">Choisir une capture</button>
+            <input type="file" id="file" accept=".csv,.gz,.csv.gz,text/csv,application/gzip,application/x-gzip" class="hidden">
+            <button class="btn wide live" id="useLive">Live Database</button>
+          </div>
+        </div>
+        <p class="hint" id="capHint">Capture = coupe temporelle pour DIFF. Le live ne suffit pas : le portail n’a que l’état courant.</p>
+      </div>
+    </aside>
+    <div class="split" id="splitL"></div>
+    <section id="center">
+      <div id="scroller">
+        <div class="cols" id="cols">
+          <span></span>
+          <span data-k="ref_number">Réf</span>
+          <span data-k="name" id="hName">Nom</span>
+          <span data-k="start_date" id="hStart">Départ</span>
+          <span data-k="total" class="active" id="hTotal">Total</span>
+          <span data-k="dest" id="hDest">Destination</span>
+        </div>
+        <div class="cols simple-cols" id="colsSimple">
+          <span></span>
+          <span data-k="name">Nom</span>
+          <span data-k="start_date">Date</span>
+          <span data-k="total" class="active">Total</span>
+        </div>
+        <div id="rows"></div>
+        <div class="empty hidden" id="empty">Aucune note.</div>
+      </div>
+      <div id="statsView" class="hidden"></div>
+    </section>
+    <div class="split d" id="splitR"></div>
+    <aside class="detail pad" id="detail">
+      <div class="detail-head">
+        <div class="grab"></div>
+        <h2 id="ficheLab">Fiche</h2>
+        <div class="detail-tools">
+          <button class="btn" id="copyBtn">Copier</button>
+          <button class="btn" id="starBtn">Favori</button>
+          <button class="btn iconbtn" id="expandDetail" title="Agrandir">▴</button>
+          <button class="btn" id="closeDetail">×</button>
+        </div>
+      </div>
+      <div id="detailBody"><p class="hint" id="ficheEmpty">Clique une ligne.</p></div>
+    </aside>
+  </main>
+  <footer>
+    <div id="prog"><i id="progI"></i></div>
+    <span id="status">prêt</span>
+    <span class="grow"></span>
+    <a href="https://open.canada.ca/data/dataset/009f9a49-c2d9-4d29-a6d4-1a228da335ce" target="_blank" rel="noreferrer" style="color:var(--accent);text-decoration:none">travelq</a>
+  </footer>
+</div>
+<div class="sheet" id="fileSheet">
+  <div class="panel">
+    <div class="panel-h"><h2 id="fileSheetLab">Fichiers</h2><span class="grow"></span><button class="btn" id="closeFile">×</button></div>
+    <div class="panel-b">
+      <button class="btn wide primary" id="sheetLoadAll">Tout charger</button>
+      <button class="btn wide" id="sheetOfficial">Télécharger officiel</button>
+      <button class="btn wide" id="sheetPick">Choisir une capture</button>
+      <button class="btn wide live" id="sheetLive">Live Database</button>
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+      <button class="btn wide primary" id="sheetCsv">CSV filtré</button>
+      <button class="btn wide" id="sheetCsvFav">CSV favoris</button>
+      <button class="btn wide" id="sheetDiff">Diff</button>
+      <p class="hint" id="fileHint">Captures CSV, live, et export de la vue filtrée.</p>
+    </div>
+  </div>
+</div>
+<div class="sheet" id="filterSheet">
+  <div class="panel">
+    <div class="panel-h"><h2 id="filtSheetLab">Filtres</h2><span class="grow"></span><button class="btn" id="langBtn2">FR / EN</button><button class="btn" id="closeFilt">×</button></div>
+    <div class="panel-b" id="filterSheetBody"></div>
+  </div>
+</div>
+<div class="sheet" id="cfgSheet">
+  <div class="panel">
+    <div class="panel-h"><h2 id="cfgSheetLab">Config</h2><span class="grow"></span><button class="btn" id="closeCfg">×</button></div>
+    <div class="panel-b">
+      <div class="cfg-row">
+        <h2 id="hAppear">Apparence visuelle</h2>
+        <div class="theme-picks" id="themePicks">
+          <button type="button" class="theme-card on" data-theme="darkblue" id="themeDark">
+            <i class="sw darkblue"></i>
+            <b>DarkBlue</b>
+            <span id="themeDarkHint">thème actuel</span>
+          </button>
+          <button type="button" class="theme-card" data-theme="lightred" id="themeLight">
+            <i class="sw lightred"></i>
+            <b>LightRed</b>
+            <span id="themeLightHint">Canada · impression</span>
+          </button>
+        </div>
+        <p class="hint" id="appearHint">LightRed = rouge et blanc, lisible à l’impression.</p>
+      </div>
+      <div class="cfg-row">
+        <h2 id="hLoadSet">Chargement</h2>
+        <label for="pageSize"><span id="labPageSize">Taille des blocs</span> · <b class="val" id="pageSizeVal">32 000</b></label>
+        <input class="range" type="range" id="pageSize" min="1000" max="32000" step="1000" value="32000">
+        <p class="hint" id="pageSizeHint">Plus petit = barre plus fluide. Plus grand = moins d’appels API. Max CKAN 32 000.</p>
+      </div>
+      <div class="cfg-row">
+        <h2 id="hMem">Mémoire</h2>
+        <p class="hint" id="memHint">Les captures live + locale en double occupent la RAM. Vide les copies inutiles après un chargement.</p>
+        <button class="btn wide" id="gcBtn">Libérer la mémoire</button>
+        <p class="hint" id="memLab"></p>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const RID = "8282db2a-878f-475c-af10-ad56aa8fa72c";
+const CKAN = "https://open.canada.ca/data/api/3/action";
+const CSV_OFFICIAL = "https://open.canada.ca/data/dataset/009f9a49-c2d9-4d29-a6d4-1a228da335ce/resource/8282db2a-878f-475c-af10-ad56aa8fa72c/download/travelq.csv";
+const I18N = {
+  fr: {
+    ph: "Nom, destination, réf…", notes: "notes", loaded: "chargé",
+    src: "Source", field: "Chercher dans", sort: "Tri", year: "Année (départ)", grp: "Groupe",
+    fiche: "Fiche", empty: "Clique une ligne.", none: "Aucune note.", more: "Charger plus", all: "Tout charger",
+    fav: "Favori", favs: "Favoris", copy: "Copier", csv: "CSV filtré",
+    ready: "prêt", loading: "chargement…", err: "erreur API", live: "Live · DataStore open.canada.ca",
+    local: "Capture locale", purpose: "Motif", dest: "Destination", org: "Organisation",
+    title: "Titre", comments: "Commentaires", dates: "Dates", group: "Groupe",
+    errors: "écarts", errOnly: "écarts seulement", audit: "AUDIT", auditing: "audit…",
+    declared: "Total déclaré", computed: "Total calculé", gap: "Écart",
+    stats: "STATS", statsOn: "stats…",
+    topTotal: "Top total", topAir: "Top aérien", topTrans: "Top transport",
+    topLodge: "Top hébergement", topMeals: "Top repas", topOther: "Top autres",
+    topOrg: "Top organisations", topDest: "Top destinations",
+    mixTitle: "Répartition", notesView: "sur la vue",
+    liveBtn: "Live Database",
+    liveOn: "Connecté au DataStore officiel open.canada.ca",
+    liveOff: "Mode capture locale — Live Database inactif",
+    tipSimple: "Basculer le mode simple",
+    tipSearch: "Rechercher nom, destination ou référence",
+    tipClear: "Effacer la recherche et réafficher la liste",
+    tipSort: "Trier la liste",
+    tipYear: "Filtrer par année de départ",
+    tipStats: "Vue STATS — tops et répartition",
+    tipAudit: "AUDIT — colorer les écarts déclaré vs calculé",
+    tipFilters: "Ouvrir les filtres",
+    tipFavs: "Afficher seulement les favoris",
+    tipFiles: "Fichiers, captures et export",
+    tipLang: "Basculer français / anglais",
+    tipDiff: "Comparer deux captures CSV",
+    tipCsv: "Exporter la vue filtrée en CSV",
+    tipCsvFav: "Exporter les favoris en CSV",
+    tipLoadAll: "Charger tout le jeu en mémoire",
+    tipOfficial: "Télécharger le CSV officiel travelq",
+    tipCopy: "Copier toute la fiche (C)",
+    tipPick: "Ouvrir une capture CSV ou CSV.GZ",
+    tipDrop: "Déposer une capture CSV / GZ pour l’ouvrir en local",
+    tipStar: "Ajouter ou retirer des favoris (F)",
+    tipExpand: "Agrandir ou réduire la fiche",
+    tipClose: "Fermer",
+    tipSplit: "Glisser pour redimensionner",
+    tipField: "Champ utilisé par la recherche",
+    tipGroup: "Groupe de divulgation",
+    tipErrOnly: "Ne montrer que les notes avec un écart",
+    tipOrg: "Filtrer par organisation",
+    tipDataset: "Jeu de données officiel travelq",
+    tipKpiN: "Nombre de notes dans la vue",
+    tipKpiSum: "Somme des totaux chargés",
+    tipKpiErr: "Nombre d’écarts détectés par l’audit",
+    official: "Fiche officielle ↗",
+    tipOfficialRec: "Ouvrir la fiche sur rechercher.ouvert.canada.ca",
+    tipCfg: "Paramètres d’apparence, chargement et mémoire",
+    cfg: "Config",
+    appear: "Apparence visuelle",
+    appearHint: "LightRed = rouge et blanc, lisible à l’impression.",
+    themeDarkHint: "bleu nuit · écran",
+    themeLightHint: "Canada · impression",
+    loadSet: "Chargement",
+    pageSize: "Taille des blocs",
+    pageSizeHint: "Plus petit = barre plus fluide. Plus grand = moins d’appels API. Max CKAN 32 000.",
+    mem: "Mémoire",
+    memHint: "Les copies live + locale occupent la RAM. Vide les copies inutiles après un chargement.",
+    gc: "Libérer la mémoire",
+    inMem: "en mémoire",
+    block: "bloc",
+    page: "page",
+    eta: "reste",
+    loadAllStart: "Tout charger · demande du total…",
+    loadPage: "DataStore · page",
+    readingCsv: "Lecture CSV",
+    lines: "lignes",
+    liveFetch: "DataStore · requête"
+  },
+  en: {
+    ph: "Name, destination, ref…", notes: "records", loaded: "loaded",
+    src: "Source", field: "Search in", sort: "Sort", year: "Year (start)", grp: "Group",
+    fiche: "Record", empty: "Click a row.", none: "No records.", more: "Load more", all: "Load all",
+    fav: "Favorite", favs: "Favorites", copy: "Copy", csv: "Filtered CSV",
+    ready: "ready", loading: "loading…", err: "API error", live: "Live · DataStore open.canada.ca",
+    local: "Local snapshot", purpose: "Purpose", dest: "Destination", org: "Organization",
+    title: "Title", comments: "Comments", dates: "Dates", group: "Group",
+    errors: "gaps", errOnly: "gaps only", audit: "AUDIT", auditing: "audit…",
+    declared: "Declared total", computed: "Computed total", gap: "Gap",
+    stats: "STATS", statsOn: "stats…",
+    topTotal: "Top total", topAir: "Top airfare", topTrans: "Top transport",
+    topLodge: "Top lodging", topMeals: "Top meals", topOther: "Top other",
+    topOrg: "Top organizations", topDest: "Top destinations",
+    mixTitle: "Breakdown", notesView: "on current view",
+    liveBtn: "Live Database",
+    liveOn: "Connected to the official open.canada.ca DataStore",
+    liveOff: "Local snapshot mode — Live Database is inactive",
+    tipSimple: "Toggle simple mode",
+    tipSearch: "Search name, destination or reference",
+    tipClear: "Clear search and reset the list",
+    tipSort: "Sort the list",
+    tipYear: "Filter by start year",
+    tipStats: "STATS view — tops and mix",
+    tipAudit: "AUDIT — highlight declared vs computed gaps",
+    tipFilters: "Open filters",
+    tipFavs: "Show favorites only",
+    tipFiles: "Files, snapshots and export",
+    tipLang: "Switch French / English",
+    tipDiff: "Compare two CSV snapshots",
+    tipCsv: "Export the filtered view as CSV",
+    tipCsvFav: "Export favorites as CSV",
+    tipLoadAll: "Load the full dataset into memory",
+    tipOfficial: "Download the official travelq CSV",
+    tipPick: "Open a local CSV or CSV.GZ snapshot",
+    tipCopy: "Copy the full record (C)",
+    tipStar: "Add or remove favorite (F)",
+    tipExpand: "Expand or shrink the record sheet",
+    tipClose: "Close",
+    tipDrop: "Drop a CSV or GZ snapshot to open it locally",
+    tipSplit: "Drag to resize",
+    tipField: "Field used by search",
+    tipGroup: "Disclosure group",
+    tipErrOnly: "Show only records with a gap",
+    tipOrg: "Filter by organization",
+    tipDataset: "Official travelq dataset",
+    tipKpiN: "Number of records in view",
+    tipKpiSum: "Sum of loaded totals",
+    tipKpiErr: "Number of gaps found by audit",
+    official: "Official record ↗",
+    tipOfficialRec: "Open the record on search.open.canada.ca",
+    tipCfg: "Appearance, loading and memory settings",
+    cfg: "Config",
+    appear: "Visual appearance",
+    appearHint: "LightRed = red and white, easy to print.",
+    themeDarkHint: "night blue · screen",
+    themeLightHint: "Canada · print",
+    loadSet: "Loading",
+    pageSize: "Block size",
+    pageSizeHint: "Smaller = smoother progress. Larger = fewer API calls. CKAN max 32,000.",
+    mem: "Memory",
+    memHint: "Live + local copies use RAM. Drop unused copies after a load.",
+    gc: "Free memory",
+    inMem: "in memory",
+    block: "block",
+    page: "page",
+    eta: "left",
+    loadAllStart: "Load all · fetching total…",
+    loadPage: "DataStore · page",
+    readingCsv: "Reading CSV",
+    lines: "rows",
+    liveFetch: "DataStore · request"
+  }
+};
+
+const state = {
+  lang: localStorage.getItem("ogcx_lang") || "fr",
+  mode: "live",
+  q: "",
+  field: "name",
+  sort: "total desc",
+  year: "",
+  group: "",
+  org: "",
+  offset: 0,
+  limit: 60,
+  total: 0,
+  items: [],
+  local: [],
+  localB: null,
+  selected: null,
+  favs: new Set(JSON.parse(localStorage.getItem("ogcx_tfavs") || "[]")),
+  favOnly: false,
+  errOnly: false,
+  audit: false,
+  auditCount: 0,
+  stats: false,
+  diff: false,
+  loading: false,
+  loadSeq: 0,
+  theme: (localStorage.getItem("ogcx_theme") === "lightred" ? "lightred" : "darkblue"),
+  pageSize: (function () {
+    const raw = localStorage.getItem("ogcx_pageSize");
+    const n = Number(raw);
+    if (!raw || raw === "8000" || !Number.isFinite(n)) return 32000;
+    return Math.max(1000, Math.min(32000, n));
+  })()
+};
+
+const $ = (id) => document.getElementById(id);
+const t = (k) => I18N[state.lang][k] || k;
+const loc = () => state.lang === "fr" ? "fr" : "en";
+const pick = (r, en, fr) => (loc() === "fr" ? (r[fr] || r[en]) : (r[en] || r[fr])) || "";
+const orgTitle = (s) => {
+  const parts = String(s || "").split("|").map(x => x.trim());
+  if (parts.length === 2) return loc() === "fr" ? parts[1] : parts[0];
+  return s || "";
+};
+const num = (v) => {
+  if (v == null || v === "") return 0;
+  const n = Number(String(v).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : 0;
+};
+const money = (v) => new Intl.NumberFormat(loc() === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(num(v));
+const money2 = (v) => new Intl.NumberFormat(loc() === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" }).format(num(v));
+const fmtN = (n) => new Intl.NumberFormat(loc() === "fr" ? "fr-CA" : "en-CA").format(n || 0);
+const keyOf = (r) => `${r.ref_number || ""}|${r.owner_org || ""}|${r.start_date || ""}`;
+const destOf = (r) => [pick(r, "destination_en", "destination_fr"), pick(r, "destination_2_en", "destination_2_fr"), pick(r, "destination_other_en", "destination_other_fr")].filter(Boolean).join(" · ");
+const trueTotal = (r) => num(r.airfare) + num(r.other_transport) + num(r.lodging) + num(r.meals) + num(r.other_expenses);
+const gapOf = (r) => Math.round((trueTotal(r) - num(r.total)) * 100) / 100;
+const isGap = (r) => Math.abs(gapOf(r)) >= 0.01;
+
+const _escN = document.createElement("div");
+function esc(s) {
+  _escN.textContent = String(s ?? "");
+  return _escN.innerHTML;
+}
+function officialUrl(r) {
+  if (!r || !r.owner_org || !r.ref_number) return "";
+  const id = encodeURIComponent(`${r.owner_org},${r.ref_number}`);
+  return loc() === "fr"
+    ? `https://rechercher.ouvert.canada.ca/voyage/record/${id}`
+    : `https://search.open.canada.ca/travel/record/${id}`;
+}
+function etaLabel(sec) {
+  if (!Number.isFinite(sec) || sec < 0) return "";
+  if (sec < 5) return "";
+  if (sec < 60) return `${t("eta")} ${Math.round(sec)}s`;
+  return `${t("eta")} ${Math.round(sec / 60)} min`;
+}
+function setProg(frac, msg) {
+  if ($("progI")) $("progI").style.width = Math.max(0, Math.min(100, Math.round((frac || 0) * 100))) + "%";
+  if (msg && $("status")) $("status").textContent = msg;
+}
+
+async function ckan(action, params) {
+  const qs = new URLSearchParams(params);
+  const urls = [`${CKAN}/${action}?${qs}`, `/ckan/${action}?${qs}`];
+  let last;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) { last = new Error(res.status + ""); continue; }
+      const json = await res.json();
+      if (!json.success) { last = new Error("ckan"); continue; }
+      return json.result;
+    } catch (e) { last = e; }
+  }
+  throw last || new Error("ckan");
+}
+
+function setBusy(on, msg) {
+  state.loading = on;
+  $("status").textContent = msg || (on ? t("loading") : t("ready"));
+  if (!on && !state.audit) $("progI").style.width = "0";
+}
+
+function paintLiveBtn() {
+  const live = state.mode === "live";
+  ["useLive", "sheetLive"].forEach((id) => {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = t("liveBtn");
+    el.classList.toggle("on", live);
+    el.disabled = !live;
+    el.title = live ? t("liveOn") : t("liveOff");
+    el.setAttribute("aria-pressed", live ? "true" : "false");
+  });
+}
+
+function applyTips() {
+  const tip = (id, key) => { if ($(id)) $(id).title = t(key); };
+  tip("simpleBtn", "tipSimple");
+  tip("q", "tipSearch");
+  tip("clearQ", "tipClear");
+  tip("sort", "tipSort");
+  tip("sortQuick", "tipSort");
+  tip("year", "tipYear");
+  tip("yearQuick", "tipYear");
+  tip("statsBtn", "tipStats");
+  tip("statsSimpleBtn", "tipStats");
+  tip("auditBtn", "tipAudit");
+  tip("auditSimpleBtn", "tipAudit");
+  tip("searchMenuBtn", "tipFilters");
+  tip("favOnlyBtn", "tipFavs");
+  tip("favSimpleBtn", "tipFavs");
+  tip("fileMenuBtn", "tipFiles");
+  tip("cfgBtn", "tipCfg");
+  tip("closeCfg", "tipClose");
+  tip("langBtn", "tipLang");
+  tip("langBtn2", "tipLang");
+  tip("diffBtn", "tipDiff");
+  tip("sheetDiff", "tipDiff");
+  tip("csvBtn", "tipCsv");
+  tip("sheetCsv", "tipCsv");
+  tip("sheetCsvFav", "tipCsvFav");
+  tip("loadAllBtn", "tipLoadAll");
+  tip("sheetLoadAll", "tipLoadAll");
+  tip("loadOfficial", "tipOfficial");
+  tip("sheetOfficial", "tipOfficial");
+  tip("pickBtn", "tipPick");
+  tip("sheetPick", "tipPick");
+  tip("copyBtn", "tipCopy");
+  tip("starBtn", "tipStar");
+  tip("expandDetail", "tipExpand");
+  tip("closeDetail", "tipClose");
+  tip("closeFile", "tipClose");
+  tip("closeFilt", "tipClose");
+  tip("field", "tipField");
+  tip("group", "tipGroup");
+  tip("errOnly", "tipErrOnly");
+  tip("drop", "tipDrop");
+  tip("splitL", "tipSplit");
+  tip("splitR", "tipSplit");
+  if ($("kpiN") && $("kpiN").parentElement) $("kpiN").parentElement.title = t("tipKpiN");
+  if ($("kpiSum") && $("kpiSum").parentElement) $("kpiSum").parentElement.title = t("tipKpiSum");
+  if ($("kpiErr") && $("kpiErr").parentElement) $("kpiErr").parentElement.title = t("tipKpiErr");
+  const ds = document.querySelector("footer a");
+  if (ds) ds.title = t("tipDataset");
+  const orgSel = $("orgSel");
+  if (orgSel) orgSel.title = t("tipOrg");
+  paintLiveBtn();
+}
+
+function applyI18n() {
+  $("q").placeholder = t("ph");
+  $("labN").textContent = t("notes");
+  $("labSum").textContent = t("loaded");
+  if ($("labErr")) $("labErr").textContent = t("errors");
+  if ($("labErrOnly")) $("labErrOnly").textContent = t("errOnly");
+  if ($("hErr")) $("hErr").textContent = t("errors");
+  if ($("hDest")) $("hDest").textContent = t("dest");
+  if ($("auditBtn")) $("auditBtn").textContent = t("audit");
+  if ($("statsBtn")) $("statsBtn").textContent = t("stats");
+  $("ficheLab").textContent = t("fiche");
+  $("copyBtn").textContent = t("copy");
+  $("starBtn").textContent = t("fav");
+  $("favOnlyBtn").textContent = t("favs");
+  $("csvBtn").textContent = t("csv");
+  if ($("moreBtn")) $("moreBtn").textContent = t("more");
+  const allLab = t("all");
+  if ($("moreAllBtn")) $("moreAllBtn").textContent = allLab;
+  if ($("loadAllBtn")) $("loadAllBtn").textContent = allLab;
+  $("hSrc").textContent = t("src");
+  $("hField").textContent = t("field");
+  $("hSort").textContent = t("sort");
+  $("hYear").textContent = t("year");
+  $("hGrp").textContent = t("grp");
+  $("srcLab").textContent = state.mode === "live" ? t("live") : t("local") + " · " + fmtN(state.local.length);
+  $("srcLab").title = state.mode === "live" ? t("liveOn") : t("liveOff");
+  if ($("cfgSheetLab")) $("cfgSheetLab").textContent = t("cfg");
+  if ($("hAppear")) $("hAppear").textContent = t("appear");
+  if ($("appearHint")) $("appearHint").textContent = t("appearHint");
+  if ($("themeDarkHint")) $("themeDarkHint").textContent = t("themeDarkHint");
+  if ($("themeLightHint")) $("themeLightHint").textContent = t("themeLightHint");
+  if ($("hLoadSet")) $("hLoadSet").textContent = t("loadSet");
+  if ($("labPageSize")) $("labPageSize").textContent = t("pageSize");
+  if ($("pageSizeHint")) $("pageSizeHint").textContent = t("pageSizeHint");
+  if ($("hMem")) $("hMem").textContent = t("mem");
+  if ($("memHint")) $("memHint").textContent = t("memHint");
+  if ($("gcBtn")) $("gcBtn").textContent = t("gc");
+  if ($("pageSize")) $("pageSize").value = String(state.pageSize);
+  paintPageSize();
+  document.documentElement.lang = state.lang;
+  applyTips();
+}
+
+function liveQuery() {
+  const q = {};
+  if (state.q) q[state.field] = state.q;
+  if (state.year) q.start_date = state.year;
+  const filters = {};
+  if (state.group) filters.disclosure_group = state.group;
+  if (state.org) filters.owner_org = state.org;
+  const apiSort = state.sort.startsWith("dest ")
+    ? state.sort.replace("dest ", "destination_en ")
+    : state.sort.startsWith("total ")
+      ? "start_date desc"
+      : state.sort;
+  const params = {
+    resource_id: RID,
+    limit: String(state.limit),
+    offset: String(state.offset),
+    sort: apiSort
+  };
+  if (Object.keys(q).length) params.q = JSON.stringify(q);
+  if (Object.keys(filters).length) params.filters = JSON.stringify(filters);
+  return params;
+}
+
+let _viewCache = { key: "", list: null };
+function localFiltered() {
+  const key = [state.q, state.field, state.sort, state.year, state.group, state.org, state.favOnly, state.errOnly, state.audit, state.local.length].join("|");
+  if (_viewCache.key === key && _viewCache.list) return _viewCache.list;
+  const q = state.q.toLowerCase();
+  let list = state.local;
+  if (q) {
+    list = list.filter(r => String(r[state.field] || r.name || "").toLowerCase().includes(q)
+      || String(pick(r, state.field, state.field.replace("_en", "_fr")) || "").toLowerCase().includes(q));
+    if (state.field === "destination_en") list = state.local.filter(r => destOf(r).toLowerCase().includes(q));
+    if (state.field === "purpose_en") list = state.local.filter(r => (pick(r,"purpose_en","purpose_fr") + "").toLowerCase().includes(q));
+    if (state.field === "title_en") list = state.local.filter(r => (pick(r,"title_en","title_fr") + "").toLowerCase().includes(q));
+    if (state.field === "owner_org_title") list = state.local.filter(r => orgTitle(r.owner_org_title).toLowerCase().includes(q));
+  }
+  if (state.year) list = list.filter(r => String(r.start_date || "").startsWith(state.year));
+  if (state.group) list = list.filter(r => r.disclosure_group === state.group);
+  if (state.org) list = list.filter(r => r.owner_org === state.org);
+  if (state.favOnly) list = list.filter(r => state.favs.has(keyOf(r)));
+  if (state.audit && state.errOnly) list = list.filter(isGap);
+  list = list.slice().sort(cmpRows);
+  _viewCache = { key, list };
+  return list;
+}
+
+function cmpRows(a, b) {
+  const [col, dir] = (state.sort || "start_date desc").split(" ");
+  let av, bv;
+  if (col === "total" && state.audit) {
+    av = Math.abs(gapOf(a));
+    bv = Math.abs(gapOf(b));
+  } else if (col === "total" || col === "trueTotal" || col === "airfare" || col === "other_transport" || col === "lodging" || col === "meals" || col === "other_expenses") {
+    av = col === "trueTotal" ? trueTotal(a) : num(a[col]);
+    bv = col === "trueTotal" ? trueTotal(b) : num(b[col]);
+  } else if (col === "dest") { av = destOf(a).toLowerCase(); bv = destOf(b).toLowerCase(); }
+  else { av = String(a[col] || "").toLowerCase(); bv = String(b[col] || "").toLowerCase(); }
+  if (av < bv) return dir === "asc" ? -1 : 1;
+  if (av > bv) return dir === "asc" ? 1 : -1;
+  return 0;
+}
+
+function paintSortHeaders() {
+  const [col, dir] = (state.sort || "").split(" ");
+  document.querySelectorAll("#cols span[data-k], #colsSimple span[data-k]").forEach((el) => {
+    const k = el.dataset.k;
+    el.classList.toggle("active", k === col);
+    const label = el.textContent.replace(/[▲▼]\s*$/, "").trim();
+    el.textContent = label;
+    if (k === col) el.insertAdjacentHTML("beforeend", `<span class="arrow">${dir === "asc" ? "▲" : "▼"}</span>`);
+  });
+  ["sort", "sortQuick"].forEach((id) => {
+    const sel = $(id);
+    if (sel && [...sel.options].some(o => o.value === state.sort)) sel.value = state.sort;
+  });
+  ["year", "yearQuick"].forEach((id) => {
+    const sel = $(id);
+    if (sel) sel.value = state.year || "";
+  });
+}
+
+function diffMark(r) {
+  if (!state.diff || !state.localB) return "";
+  const k = keyOf(r);
+  const mapB = state._bmap || (state._bmap = new Map(state.localB.map(x => [keyOf(x), x])));
+  const mapA = state._amap || (state._amap = new Map(state.local.map(x => [keyOf(x), x])));
+  if (state.mode !== "local") return "";
+  if (!mapB.has(k)) return "add";
+  if (num(mapB.get(k).total) !== num(r.total)) return "mod";
+  return "";
+}
+
+function renderRows() {
+  const rows = $("rows");
+  rows.innerHTML = "";
+  const raw = state.mode === "local" ? localFiltered() : state.items.filter(r => {
+    if (state.favOnly && !state.favs.has(keyOf(r))) return false;
+    if (state.audit && state.errOnly && !isGap(r)) return false;
+    return true;
+  });
+  const list = raw;
+  $("empty").classList.toggle("hidden", list.length > 0);
+  $("empty").textContent = t("none");
+  const frag = document.createDocumentFragment();
+  const shown = state.mode === "local" ? list.slice(0, Math.max(state.offset + state.limit, state.limit)) : list;
+  if (state.mode === "local") state.total = list.length;
+  for (const r of shown) {
+    const div = document.createElement("div");
+    const k = keyOf(r);
+    const mark = diffMark(r);
+    const gap = state.audit && isGap(r);
+    div.className = "row" + (state.selected && keyOf(state.selected) === k ? " on" : "") + (state.favs.has(k) ? " fav" : "") + (mark ? " " + mark : "") + (gap ? " err" : "");
+    div.dataset.k = k;
+    if (gap) {
+      const g = gapOf(r);
+      div.title = `${t("gap")} ${g >= 0 ? "+" : ""}${money2(g)}`;
+    }
+    const dest = destOf(r);
+    const g = state.audit ? gapOf(r) : 0;
+    const gapHtml = state.audit ? `<span class="c-gap">(${g >= 0 ? "+" : ""}${money2(g)})</span>` : "";
+    div.innerHTML = `
+      <span class="c-star">${state.favs.has(k) ? "★" : ""}</span>
+      <span class="c-ref id">${esc(r.ref_number)}</span>
+      <span class="c-name">${esc(r.name)}</span>
+      <span class="c-start money">${esc((r.start_date || "").slice(0,10))}</span>
+      <span class="c-total money">${money(r.total)}${gapHtml}</span>
+      <span class="c-dest">${esc(dest)}</span>`;
+    frag.appendChild(div);
+  }
+  rows.appendChild(frag);
+  $("kpiN").textContent = fmtN(state.mode === "local" ? state.total : (state.total || list.length));
+  const sumSrc = state.mode === "local" ? list : state.items;
+  $("kpiSum").textContent = money(sumSrc.reduce((a, r) => a + num(r.total), 0));
+  if ($("kpiErr")) $("kpiErr").textContent = state.audit ? fmtN(state.auditCount) : "—";
+  if (state.mode === "local" && $("moreBtn")) $("moreBtn").classList.toggle("hidden", shown.length >= list.length);
+  const allDone = state.mode === "local" || (state.items.length >= state.total && state.total > 0);
+  if ($("moreAllBtn")) $("moreAllBtn").classList.toggle("hidden", allDone);
+  if ($("loadAllBtn")) $("loadAllBtn").classList.toggle("hidden", allDone);
+  paintSortHeaders();
+}
+
+function renderOrgs() {
+  const box = $("facetOrg");
+  const src = state.mode === "local" ? state.local : state.items;
+  const counts = new Map();
+  for (const r of src) {
+    const k = r.owner_org || "";
+    if (!k) continue;
+    const cur = counts.get(k) || { n: 0, title: r.owner_org_title || k };
+    cur.n++;
+    counts.set(k, cur);
+  }
+  const opts = [...counts.entries()].sort((a, b) => orgTitle(a[1].title).localeCompare(orgTitle(b[1].title), loc() === "fr" ? "fr" : "en"));
+  box.innerHTML = `<h2>${t("org")}</h2><select class="full" id="orgSel"><option value="">${loc()==="fr"?"toutes":"all"}</option>` +
+    opts.map(([k, v]) => `<option value="${esc(k)}" ${state.org === k ? "selected" : ""}>${esc(orgTitle(v.title))} (${v.n})</option>`).join("") +
+    `</select>`;
+}
+
+function renderDetail(r) {
+  if (!r) {
+    $("detailBody").innerHTML = `<p class="hint">${t("empty")}</p>`;
+    return;
+  }
+  $("starBtn").classList.toggle("on", state.favs.has(keyOf(r)));
+  const parts = [
+    ["airfare", loc() === "fr" ? "Aérien" : "Airfare"],
+    ["other_transport", loc() === "fr" ? "Transport" : "Transport"],
+    ["lodging", loc() === "fr" ? "Hébergement" : "Lodging"],
+    ["meals", loc() === "fr" ? "Repas" : "Meals"],
+    ["other_expenses", loc() === "fr" ? "Autres" : "Other"]
+  ];
+  const max = Math.max(1, ...parts.map(([k]) => num(r[k])), num(r.total));
+  const bars = parts.map(([k, lab]) => {
+    const v = num(r[k]);
+    return `<div class="barline"><span>${lab}</span><i style="width:${Math.round(100*v/max)}%"></i><em>${money2(v)}</em></div>`;
+  }).join("");
+  const computed = trueTotal(r);
+  const declared = num(r.total);
+  const gap = gapOf(r);
+  const bad = isGap(r);
+  const audit = state.audit ? `<dl class="dl">
+      <dt>${t("declared")}</dt><dd><b style="color:var(--accent)">${money2(declared)}</b></dd>
+      <dt>${t("computed")}</dt><dd><b style="color:${bad ? "var(--danger)" : "var(--ok)"}">${money2(computed)}</b></dd>
+      <dt>${t("gap")}</dt><dd style="color:${bad ? "var(--danger)" : "var(--muted)"}">${gap >= 0 ? "+" : ""}${money2(gap)}</dd>
+    </dl>` : `<dl class="dl"><dt>Total</dt><dd><b style="color:var(--accent)">${money2(declared)}</b></dd></dl>`;
+  const prev = state.diff && state.localB ? (state._bmap || new Map(state.localB.map(x => [keyOf(x), x]))).get(keyOf(r)) : null;
+  const delta = prev && num(prev.total) !== num(r.total)
+    ? `<p class="hint">${loc()==="fr"?"Avant":"Was"} ${money2(prev.total)} → ${money2(r.total)}</p>` : "";
+  $("detailBody").innerHTML = `
+    <h3 style="margin:0 0 6px;font-size:16px">${esc(r.name)}</h3>
+    <div class="hint">${esc(pick(r,"title_en","title_fr"))}</div>
+    <dl class="dl">
+      <dt>Réf</dt><dd class="id">${esc(r.ref_number)}</dd>
+      <dt>${t("dates")}</dt><dd>${esc(r.start_date || "")} → ${esc(r.end_date || r.start_date || "")}</dd>
+      <dt>${t("dest")}</dt><dd>${esc(destOf(r))}</dd>
+      <dt>${t("org")}</dt><dd>${esc(orgTitle(r.owner_org_title))}</dd>
+      <dt>${t("group")}</dt><dd>${esc(r.disclosure_group || "")}</dd>
+    </dl>
+    ${officialUrl(r) ? `<a class="official" href="${officialUrl(r)}" target="_blank" rel="noreferrer" title="${t("tipOfficialRec")}">${t("official")}</a>` : ""}
+    ${audit}
+    ${delta}
+    <div class="bars">${bars}</div>
+    <h2>${t("purpose")}</h2>
+    <div class="prose">${esc(pick(r,"purpose_en","purpose_fr"))}</div>
+    <h2>${t("comments")}</h2>
+    <div class="prose">${esc(pick(r,"additional_comments_en","additional_comments_fr") || "—")}</div>
+  `;
+  if (document.body.classList.contains("simple")) {
+    $("detail").classList.add("open");
+    document.body.classList.add("fiche-open");
+  }
+}
+
+async function reload(reset) {
+  if (reset) {
+    state.loadSeq += 1;
+    state.offset = 0;
+    state.items = [];
+    state.loading = false;
+  } else if (state.loading) {
+    return;
+  }
+  const seq = state.loadSeq;
+  if (state.mode === "local") {
+    renderOrgs(); renderRows(); applyI18n();
+    $("status").textContent = `${fmtN(state.total)} · ${t("local")}`;
+    if (state.stats) renderStats();
+    return;
+  }
+  setBusy(true, t("liveFetch"));
+  setProg(0.15, t("liveFetch"));
+  try {
+    const result = await ckan("datastore_search", liveQuery());
+    if (seq !== state.loadSeq) return;
+    state.total = result.total || 0;
+    const batch = result.records || [];
+    state.items = reset ? batch : state.items.concat(batch);
+    if (state.sort.startsWith("total") || state.sort.startsWith("dest")) state.items.sort(cmpRows);
+    state.offset = state.items.length;
+    if ($("moreBtn")) $("moreBtn").classList.toggle("hidden", state.items.length >= state.total);
+    if ($("moreAllBtn")) $("moreAllBtn").classList.toggle("hidden", state.items.length >= state.total);
+    renderOrgs(); renderRows(); applyI18n();
+    const pct = state.total ? state.items.length / state.total : 1;
+    setProg(pct, `${t("liveFetch")} · ${fmtN(state.items.length)} / ${fmtN(state.total)}`);
+    setBusy(false, `${fmtN(state.items.length)} / ${fmtN(state.total)} · live`);
+    if (state.audit) runAudit();
+    if (state.stats) renderStats();
+  } catch (e) {
+    if (seq !== state.loadSeq) return;
+    setBusy(false, t("err"));
+    $("empty").classList.remove("hidden");
+    $("empty").textContent = t("err") + " — ouvre une capture CSV (le live a besoin d’HTTPS / Worker)";
+  }
+}
+
+function setSort(col) {
+  const [cur, dir] = (state.sort || "start_date desc").split(" ");
+  const nextDir = cur === col && dir === "desc" ? "asc" : "desc";
+  state.sort = col + " " + nextDir;
+  paintSortHeaders();
+  if (state.mode === "local") {
+    state.offset = 0;
+    renderRows();
+    return;
+  }
+  if (col === "total" || col === "dest" || col === "trueTotal" || col === "airfare" || col === "other_transport" || col === "lodging" || col === "meals" || col === "other_expenses") {
+    state.items = state.items.slice().sort(cmpRows);
+    renderRows();
+    return;
+  }
+  reload(true);
+}
+
+async function loadAll() {
+  if (state.loading) return;
+  if (state.mode === "local") {
+    state.offset = Math.max(state.local.length, state.limit);
+    renderRows();
+    return;
+  }
+  const page = state.pageSize || 32000;
+  const seq = ++state.loadSeq;
+  const t0 = performance.now();
+  setBusy(true, t("loadAllStart"));
+  setProg(0.02, t("loadAllStart"));
+  try {
+    const q = liveQuery();
+    const first = await ckan("datastore_search", Object.assign({}, q, { limit: "0", offset: "0" }));
+    if (seq !== state.loadSeq) return;
+    const goal = first.total || 0;
+    state.total = goal;
+    let pageN = 0;
+    while (state.items.length < goal) {
+      if (seq !== state.loadSeq) return;
+      const offset = state.items.length;
+      pageN += 1;
+      setProg(goal ? offset / goal : 0, `${t("loadPage")} ${pageN} · ${fmtN(offset)} / ${fmtN(goal)} · ${t("block")} ${fmtN(page)}`);
+      const result = await ckan("datastore_search", Object.assign({}, q, { limit: String(page), offset: String(offset) }));
+      if (seq !== state.loadSeq) return;
+      const batch = result.records || [];
+      if (!batch.length) break;
+      for (let i = 0; i < batch.length; i++) state.items.push(batch[i]);
+      const elapsed = (performance.now() - t0) / 1000;
+      const rate = state.items.length / Math.max(elapsed, 0.25);
+      const eta = rate ? (goal - state.items.length) / rate : 0;
+      const extra = etaLabel(eta);
+      setProg(goal ? state.items.length / goal : 1, `${t("all")} · ${fmtN(state.items.length)} / ${fmtN(goal)} · ${t("page")} ${pageN} · ${t("block")} ${fmtN(page)}${extra ? " · " + extra : ""}`);
+      if ($("kpiN")) $("kpiN").textContent = fmtN(state.items.length);
+      await new Promise(r => setTimeout(r, 0));
+    }
+    state.local = state.items;
+    state.items = [];
+    state.mode = "local";
+    state.limit = 80;
+    state.offset = 0;
+    state._amap = null;
+    state._bmap = null;
+    _viewCache = { key: "", list: null };
+    renderOrgs();
+    renderRows();
+    applyI18n();
+    setBusy(false, `${fmtN(state.local.length)} · ${t("inMem")}`);
+    setProg(1, `${fmtN(state.local.length)} · ${t("inMem")}`);
+  } catch (e) {
+    if (seq !== state.loadSeq) return;
+    setBusy(false, t("err"));
+  }
+}
+
+function findRow(k) {
+  return (state.mode === "local" ? state.local : state.items).find(r => keyOf(r) === k);
+}
+
+function parseCsvLine(line) {
+  const out = []; let cur = ""; let q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (q && line[i+1] === '"') { cur += '"'; i++; continue; }
+      q = !q; continue;
+    }
+    if (c === "," && !q) { out.push(cur); cur = ""; continue; }
+    cur += c;
+  }
+  out.push(cur);
+  return out;
+}
+
+function isGzFile(file) {
+  const n = String(file && file.name || "").toLowerCase();
+  const typ = String(file && file.type || "").toLowerCase();
+  return n.endsWith(".gz") || typ === "application/gzip" || typ === "application/x-gzip";
+}
+async function captureReader(file) {
+  let stream = file.stream();
+  if (isGzFile(file)) {
+    if (typeof DecompressionStream === "undefined") {
+      throw new Error("gzip");
+    }
+    stream = stream.pipeThrough(new DecompressionStream("gzip"));
+  }
+  return stream.getReader();
+}
+async function ingestFile(file, asB) {
+  setBusy(true, isGzFile(file)
+    ? (loc() === "fr" ? "lecture GZ…" : "reading GZ…")
+    : (loc() === "fr" ? "lecture capture…" : "reading snapshot…"));
+  const rows = [];
+  let reader;
+  try {
+    reader = await captureReader(file);
+  } catch (e) {
+    setBusy(false, loc() === "fr" ? "fichier GZ illisible" : "unreadable GZ file");
+    return;
+  }
+  const dec = new TextDecoder();
+  let buf = ""; let header = null; let n = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    buf += dec.decode(value || new Uint8Array(), { stream: !done });
+    if (done) buf += "\n";
+    let nl;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      let line = buf.slice(0, nl); buf = buf.slice(nl + 1);
+      if (line.endsWith("\r")) line = line.slice(0, -1);
+      if (!line) continue;
+      if (!header) {
+        header = parseCsvLine(line.replace(/^\uFEFF/, ""));
+        continue;
+      }
+      const cells = parseCsvLine(line);
+      const rec = {};
+      header.forEach((h, i) => rec[h] = cells[i] ?? "");
+      rows.push(rec);
+      n++;
+      if (n % 4000 === 0) {
+        setProg(Math.min(0.95, n / 160000), `${t("readingCsv")} · ${fmtN(n)} ${t("lines")} · ${file.name || ""}`);
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+    if (done) break;
+  }
+  if (asB) {
+    state.localB = rows;
+    state._bmap = null;
+    state.diff = true;
+    $("diffBtn").classList.add("on");
+  } else {
+    state.local = rows;
+    state._amap = null;
+    state.mode = "local";
+    state.offset = 0;
+    state.items = [];
+    _viewCache = { key: "", list: null };
+  }
+  try {
+    const snap = { name: file.name, at: new Date().toISOString(), n: rows.length };
+    const all = JSON.parse(localStorage.getItem("ogcx_snaps") || "[]");
+    all.unshift(snap);
+    localStorage.setItem("ogcx_snaps", JSON.stringify(all.slice(0, 12)));
+  } catch {}
+  setBusy(false, `${fmtN(rows.length)} · ${file.name}`);
+  reload(true);
+}
+
+function downloadCsv(list, name) {
+  if (!list.length) return;
+  const cols = ["ref_number","name","title_en","title_fr","start_date","end_date","destination_en","destination_fr","airfare","other_transport","lodging","meals","other_expenses","total","owner_org_title","purpose_en","purpose_fr"];
+  const lines = [cols.join(",")];
+  for (const r of list) {
+    lines.push(cols.map(c => `"${String(r[c] ?? "").replace(/"/g,'""')}"`).join(","));
+  }
+  const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2500);
+}
+function exportCsv() {
+  downloadCsv(state.mode === "local" ? localFiltered() : state.items, "ogcx-voyage-filtre.csv");
+}
+function exportFavCsv() {
+  const src = state.mode === "local" ? state.local : state.items;
+  downloadCsv(src.filter(r => state.favs.has(keyOf(r))), "ogcx-voyage-favoris.csv");
+}
+
+let qTimer;
+$("q").addEventListener("input", () => {
+  state.q = $("q").value.trim();
+  $("clearQ").classList.toggle("hidden", !state.q);
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => reload(true), 280);
+});
+$("clearQ").onclick = () => {
+  clearTimeout(qTimer);
+  $("q").value = "";
+  state.q = "";
+  $("clearQ").classList.add("hidden");
+  reload(true);
+};
+document.addEventListener("change", (e) => {
+  const id = e.target && e.target.id;
+  if (id === "field" || id === "sort" || id === "year" || id === "group" || id === "sortQuick" || id === "yearQuick") {
+    if (id === "sortQuick") state.sort = e.target.value;
+    else if (id === "yearQuick") state.year = e.target.value;
+    else state[id] = e.target.value;
+    if (id === "sort" || id === "sortQuick") {
+      if ($("sort")) $("sort").value = state.sort;
+      if ($("sortQuick")) $("sortQuick").value = state.sort;
+    }
+    if (id === "year" || id === "yearQuick") {
+      if ($("year")) $("year").value = state.year;
+      if ($("yearQuick")) $("yearQuick").value = state.year;
+    }
+    reload(true);
+  }
+});
+function loadNext() {
+  if (state.loading) return;
+  if (state.mode === "local") {
+    const list = localFiltered();
+    const shown = Math.max(state.offset + state.limit, state.limit);
+    if (shown >= list.length) return;
+    state.offset += state.limit;
+    renderRows();
+    return;
+  }
+  if (state.total && state.items.length >= state.total) return;
+  reload(false);
+}
+$("scroller").addEventListener("scroll", () => {
+  const el = $("scroller");
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 280) loadNext();
+});
+document.addEventListener("keydown", (e) => {
+  const tag = (e.target && e.target.tagName) || "";
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target.isContentEditable) return;
+  if (e.key === "c" || e.key === "C") {
+    e.preventDefault();
+    copyFiche();
+    return;
+  }
+  if (e.key !== "f" && e.key !== "F") return;
+  e.preventDefault();
+  if (!state.selected) return;
+  const k = keyOf(state.selected);
+  if (state.favs.has(k)) state.favs.delete(k); else state.favs.add(k);
+  localStorage.setItem("ogcx_tfavs", JSON.stringify([...state.favs]));
+  renderRows();
+  renderDetail(state.selected);
+});
+if ($("moreBtn")) $("moreBtn").onclick = loadNext;
+if ($("moreAllBtn")) $("moreAllBtn").onclick = loadAll;
+if ($("loadAllBtn")) $("loadAllBtn").onclick = loadAll;
+$("cols").onclick = (e) => {
+  const col = e.target.closest("[data-k]");
+  if (col) setSort(col.dataset.k);
+};
+if ($("colsSimple")) $("colsSimple").onclick = (e) => {
+  const col = e.target.closest("[data-k]");
+  if (col) setSort(col.dataset.k);
+};
+$("rows").onclick = (e) => {
+  const row = e.target.closest(".row");
+  if (!row) return;
+  state.selected = findRow(row.dataset.k);
+  renderRows();
+  renderDetail(state.selected);
+  const on = $("rows").querySelector(".row.on");
+  if (on) on.scrollIntoView({ block: "nearest", behavior: "smooth" });
+};
+$("simpleBtn").onclick = () => {
+  document.body.classList.toggle("simple");
+  $("simpleBtn").classList.toggle("on", document.body.classList.contains("simple"));
+  if (!document.body.classList.contains("simple")) {
+    closeFilters();
+    $("fileSheet").classList.remove("open");
+    closeCfg();
+    closeFiche();
+  }
+};
+if ($("favSimpleBtn")) $("favSimpleBtn").onclick = () => {
+  state.favOnly = !state.favOnly;
+  $("favSimpleBtn").classList.toggle("on", state.favOnly);
+  $("favOnlyBtn").classList.toggle("on", state.favOnly);
+  renderRows();
+};
+(function bindDetailSwipe() {
+  const el = $("detail");
+  let y0 = 0, dy = 0, on = false;
+  el.addEventListener("touchstart", (e) => {
+    if (!document.body.classList.contains("simple") || !el.classList.contains("open")) return;
+    y0 = e.touches[0].clientY;
+    dy = 0; on = true;
+  }, { passive: true });
+  el.addEventListener("touchmove", (e) => {
+    if (!on) return;
+    dy = e.touches[0].clientY - y0;
+    if (dy > 0 && el.scrollTop < 4) el.style.transform = `translateY(${Math.min(dy, 240)}px)`;
+  }, { passive: true });
+  el.addEventListener("touchend", () => {
+    if (!on) return;
+    on = false;
+    el.style.transform = "";
+    if (dy > 90) closeFiche();
+  });
+})();
+if ($("auditBtn")) $("auditBtn").onclick = () => toggleAudit();
+if ($("errOnly")) $("errOnly").onchange = () => {
+  state.errOnly = $("errOnly").checked;
+  if (state.mode === "local") state.offset = 0;
+  if (state.audit) runAudit();
+  else renderRows();
+};
+
+function viewBase() {
+  const keep = state.errOnly;
+  state.errOnly = false;
+  const list = state.mode === "local"
+    ? localFiltered()
+    : state.items.filter(r => !state.favOnly || state.favs.has(keyOf(r)));
+  state.errOnly = keep;
+  return list;
+}
+
+async function runAudit() {
+  const list = viewBase();
+  const n = list.length;
+  let gaps = 0;
+  setBusy(true, t("auditing"));
+  $("progI").style.width = "0";
+  for (let i = 0; i < n; i++) {
+    if (isGap(list[i])) gaps++;
+    if (i % 2500 === 0 || i === n - 1) {
+      const pct = n ? Math.round(100 * (i + 1) / n) : 100;
+      $("progI").style.width = pct + "%";
+      $("status").textContent = `${t("auditing")} ${fmtN(i + 1)} / ${fmtN(n)}`;
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  state.auditCount = gaps;
+  setBusy(false, `${fmtN(gaps)} ${t("errors")} · ${fmtN(n)}`);
+  $("progI").style.width = "100%";
+  renderRows();
+  if (state.selected) renderDetail(state.selected);
+}
+
+function syncErrOnlyUi() {
+  if ($("errOnly")) $("errOnly").checked = !!state.errOnly;
+}
+async function toggleAudit() {
+  state.audit = !state.audit;
+  $("auditBtn").classList.toggle("on", state.audit);
+  if ($("auditSimpleBtn")) $("auditSimpleBtn").classList.toggle("on", state.audit);
+  state.errOnly = !!state.audit;
+  syncErrOnlyUi();
+  _viewCache = { key: "", list: null };
+  if (state.sort.startsWith("total") && state.mode === "live") {
+    state.items = state.items.slice().sort(cmpRows);
+  }
+  if (!state.audit) {
+    state.auditCount = 0;
+    $("progI").style.width = "0";
+    renderRows();
+    if (state.selected) renderDetail(state.selected);
+    $("status").textContent = t("ready");
+    return;
+  }
+  await runAudit();
+}
+
+const KIND = () => ([
+  { k: "airfare", lab: loc() === "fr" ? "Aérien" : "Airfare", color: "#e2b657" },
+  { k: "other_transport", lab: "Transport", color: "#6fc3b2" },
+  { k: "lodging", lab: loc() === "fr" ? "Hébergement" : "Lodging", color: "#c98bdb" },
+  { k: "meals", lab: loc() === "fr" ? "Repas" : "Meals", color: "#7dce8a" },
+  { k: "other_expenses", lab: loc() === "fr" ? "Autres" : "Other", color: "#e07a6a" }
+]);
+
+function topAgg(list, keyFn, valFn, n) {
+  const map = new Map();
+  for (const r of list) {
+    const key = keyFn(r);
+    if (!key) continue;
+    const cur = map.get(key) || { label: key, sum: 0, n: 0 };
+    cur.sum += valFn(r);
+    cur.n++;
+    map.set(key, cur);
+  }
+  return [...map.values()].sort((a, b) => b.sum - a.sum).slice(0, n);
+}
+
+function statCard(title, rows, color) {
+  const max = Math.max(1, ...rows.map(x => x.sum));
+  const body = rows.length
+    ? rows.map((x, i) => `
+        <div class="srow">
+          <span class="rk">${String(i + 1).padStart(2, "0")}</span>
+          <span class="nm" data-q="${esc(x.label)}" title="${esc(x.label)}">${esc(x.label)}</span>
+          <span class="am">${money(x.sum)}</span>
+          <div class="sbar"><i style="width:${Math.round(100 * x.sum / max)}%;background:${color}"></i></div>
+        </div>`).join("")
+    : `<p class="hint">${t("none")}</p>`;
+  return `<article class="stat-card"><h3>${title}</h3>${body}</article>`;
+}
+
+function renderStats() {
+  const box = $("statsView");
+  if (!box) return;
+  const list = viewBase();
+  const kinds = KIND();
+  const mix = kinds.map(k => ({ ...k, sum: list.reduce((a, r) => a + num(r[k.k]), 0) }));
+  const mixSum = mix.reduce((a, x) => a + x.sum, 0);
+  const declared = list.reduce((a, r) => a + num(r.total), 0);
+  const bars = mix.map(x => `<i style="width:${mixSum ? (100 * x.sum / mixSum) : 0}%;background:${x.color}" title="${x.lab}"></i>`).join("");
+  const legend = mix.map(x => `<span><i style="display:inline-block;width:8px;height:8px;border-radius:99px;background:${x.color};margin-right:5px"></i><b>${money(x.sum)}</b>${x.lab}</span>`).join("");
+  const topN = 8;
+  box.innerHTML = `
+    <div class="stat-hero">
+      <div class="big">${money(declared)}</div>
+      <div class="sub">${fmtN(list.length)} ${t("notes")} · ${t("notesView")}</div>
+    </div>
+    <h2>${t("mixTitle")}</h2>
+    <div class="mix">${bars}</div>
+    <div class="mix-leg">${legend}</div>
+    <div class="stat-grid">
+      ${statCard(t("topTotal"), topAgg(list, r => (r.name || "").trim(), r => num(r.total), topN), "#e2b657")}
+      ${statCard(t("topAir"), topAgg(list, r => (r.name || "").trim(), r => num(r.airfare), topN), "#e2b657")}
+      ${statCard(t("topTrans"), topAgg(list, r => (r.name || "").trim(), r => num(r.other_transport), topN), "#6fc3b2")}
+      ${statCard(t("topLodge"), topAgg(list, r => (r.name || "").trim(), r => num(r.lodging), topN), "#c98bdb")}
+      ${statCard(t("topMeals"), topAgg(list, r => (r.name || "").trim(), r => num(r.meals), topN), "#7dce8a")}
+      ${statCard(t("topOther"), topAgg(list, r => (r.name || "").trim(), r => num(r.other_expenses), topN), "#e07a6a")}
+      ${statCard(t("topOrg"), topAgg(list, r => orgTitle(r.owner_org_title), r => num(r.total), topN), "#8aa0ae")}
+      ${statCard(t("topDest"), topAgg(list, r => destOf(r).split(" · ")[0], r => num(r.total), topN), "#6fc3b2")}
+    </div>`;
+}
+
+function showStats(on) {
+  state.stats = on;
+  document.body.classList.toggle("stats", on);
+  $("statsBtn").classList.toggle("on", on);
+  if ($("statsSimpleBtn")) $("statsSimpleBtn").classList.toggle("on", on);
+  $("scroller").classList.toggle("hidden", on);
+  $("statsView").classList.toggle("hidden", !on);
+  if (on) {
+    $("status").textContent = t("statsOn");
+    $("progI").style.width = "80%";
+    renderStats();
+    $("progI").style.width = "100%";
+    $("status").textContent = t("stats");
+  } else {
+    $("progI").style.width = "0";
+  }
+}
+
+if ($("statsBtn")) $("statsBtn").onclick = () => showStats(!state.stats);
+$("statsView").addEventListener("click", (e) => {
+  const nm = e.target.closest("[data-q]");
+  if (!nm) return;
+  $("q").value = nm.dataset.q;
+  state.q = nm.dataset.q;
+  $("clearQ").classList.toggle("hidden", !state.q);
+  showStats(false);
+  reload(true);
+});
+function bindSplit(el, key) {
+  if (!el) return;
+  el.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    el.classList.add("hot");
+    const start = e.clientX;
+    const aside0 = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--aside")) || 280;
+    const detail0 = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--detail")) || 400;
+    const move = (ev) => {
+      const dx = ev.clientX - start;
+      if (key === "aside") {
+        const w = Math.max(180, Math.min(560, aside0 + dx));
+        document.documentElement.style.setProperty("--aside", w + "px");
+      } else {
+        const w = Math.max(240, Math.min(720, detail0 - dx));
+        document.documentElement.style.setProperty("--detail", w + "px");
+      }
+    };
+    const up = () => {
+      el.classList.remove("hot");
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      localStorage.setItem("ogcx_aside", getComputedStyle(document.documentElement).getPropertyValue("--aside").trim());
+      localStorage.setItem("ogcx_detail", getComputedStyle(document.documentElement).getPropertyValue("--detail").trim());
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  });
+}
+bindSplit($("splitL"), "aside");
+bindSplit($("splitR"), "detail");
+(function restoreSplits() {
+  const a = localStorage.getItem("ogcx_aside");
+  const d = localStorage.getItem("ogcx_detail");
+  if (a) document.documentElement.style.setProperty("--aside", a);
+  if (d) document.documentElement.style.setProperty("--detail", d);
+})();
+function flipLang() {
+  state.lang = state.lang === "fr" ? "en" : "fr";
+  localStorage.setItem("ogcx_lang", state.lang);
+  applyI18n(); renderRows(); if (state.selected) renderDetail(state.selected);
+  if (state.stats) renderStats();
+}
+$("langBtn").onclick = $("langBtn2").onclick = flipLang;
+$("favOnlyBtn").onclick = () => {
+  state.favOnly = !state.favOnly;
+  $("favOnlyBtn").classList.toggle("on", state.favOnly);
+  renderRows();
+  if (state.stats) renderStats();
+};
+$("starBtn").onclick = () => {
+  if (!state.selected) return;
+  const k = keyOf(state.selected);
+  if (state.favs.has(k)) state.favs.delete(k); else state.favs.add(k);
+  localStorage.setItem("ogcx_tfavs", JSON.stringify([...state.favs]));
+  renderRows(); renderDetail(state.selected);
+};
+function copyFiche() {
+  const r = state.selected; if (!r) return;
+  const lines = [
+    r.name || "",
+    pick(r, "title_en", "title_fr"),
+    `Réf\t${r.ref_number || ""}`,
+    `${t("dates")}\t${r.start_date || ""} → ${r.end_date || r.start_date || ""}`,
+    `${t("dest")}\t${destOf(r)}`,
+    `${t("org")}\t${orgTitle(r.owner_org_title)}`,
+    `${t("group")}\t${r.disclosure_group || ""}`,
+    `Total\t${money2(r.total)}`,
+    `${loc()==="fr"?"Aérien":"Airfare"}\t${money2(r.airfare)}`,
+    `Transport\t${money2(r.other_transport)}`,
+    `${loc()==="fr"?"Hébergement":"Lodging"}\t${money2(r.lodging)}`,
+    `${loc()==="fr"?"Repas":"Meals"}\t${money2(r.meals)}`,
+    `${loc()==="fr"?"Autres":"Other"}\t${money2(r.other_expenses)}`,
+    `${t("declared")}\t${money2(r.total)}`,
+    `${t("computed")}\t${money2(trueTotal(r))}`,
+    `${t("gap")}\t${money2(gapOf(r))}`,
+    officialUrl(r),
+    `${t("purpose")}\t${pick(r,"purpose_en","purpose_fr")}`,
+    `${t("comments")}\t${pick(r,"additional_comments_en","additional_comments_fr")}`
+  ];
+  navigator.clipboard.writeText(lines.filter(x => x != null).join("\n"));
+}
+$("copyBtn").onclick = copyFiche;
+$("csvBtn").onclick = exportCsv;
+function closeFiche() {
+  $("detail").classList.remove("open", "full");
+  document.body.classList.remove("fiche-open", "fiche-full");
+}
+$("closeDetail").onclick = closeFiche;
+if ($("expandDetail")) $("expandDetail").onclick = () => {
+  const on = $("detail").classList.toggle("full");
+  document.body.classList.toggle("fiche-full", on);
+  $("expandDetail").textContent = on ? "▾" : "▴";
+};
+function parkFilters() {
+  const home = $("aside").querySelector(".aside-body");
+  const block = $("filterBlock");
+  if (home && block && block.parentElement !== home) home.insertBefore(block, home.firstChild);
+}
+function openFilters() {
+  $("fileSheet").classList.remove("open");
+  closeCfg();
+  const block = $("filterBlock");
+  if (block) $("filterSheetBody").appendChild(block);
+  $("filterSheet").classList.add("open");
+}
+function closeFilters() {
+  $("filterSheet").classList.remove("open");
+  parkFilters();
+}
+$("searchMenuBtn").onclick = openFilters;
+$("closeFilt").onclick = closeFilters;
+$("fileMenuBtn").onclick = () => {
+  closeFilters();
+  closeCfg();
+  $("fileSheet").classList.add("open");
+};
+$("closeFile").onclick = () => $("fileSheet").classList.remove("open");
+$("fileSheet").addEventListener("click", (e) => { if (e.target.id === "fileSheet") $("fileSheet").classList.remove("open"); });
+$("filterSheet").addEventListener("click", (e) => { if (e.target.id === "filterSheet") closeFilters(); });
+function applyTheme(name) {
+  const theme = name === "lightred" ? "lightred" : "darkblue";
+  state.theme = theme;
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("ogcx_theme", theme);
+  document.querySelectorAll(".theme-card").forEach((el) => {
+    el.classList.toggle("on", el.dataset.theme === theme);
+  });
+}
+function paintPageSize() {
+  if ($("pageSizeVal")) $("pageSizeVal").textContent = fmtN(state.pageSize);
+  if ($("pageSize")) $("pageSize").value = String(state.pageSize);
+}
+function memLabel() {
+  return `live ${fmtN(state.items.length)} · local ${fmtN(state.local.length)} · B ${fmtN(state.localB ? state.localB.length : 0)}`;
+}
+function closeCfg() { if ($("cfgSheet")) $("cfgSheet").classList.remove("open"); }
+function openCfg() {
+  closeFilters();
+  if ($("fileSheet")) $("fileSheet").classList.remove("open");
+  paintPageSize();
+  if ($("memLab")) $("memLab").textContent = memLabel();
+  $("cfgSheet").classList.add("open");
+}
+function freeMemory() {
+  _viewCache = { key: "", list: null };
+  state._amap = null;
+  state._bmap = null;
+  if (state.mode === "local") state.items = [];
+  else {
+    state.local = [];
+    state.localB = null;
+    state.diff = false;
+    if ($("diffBtn")) $("diffBtn").classList.remove("on");
+  }
+  if ($("rows")) $("rows").replaceChildren();
+  if ($("memLab")) $("memLab").textContent = memLabel();
+  $("status").textContent = memLabel();
+}
+if ($("cfgBtn")) $("cfgBtn").onclick = openCfg;
+if ($("closeCfg")) $("closeCfg").onclick = closeCfg;
+if ($("cfgSheet")) $("cfgSheet").addEventListener("click", (e) => { if (e.target.id === "cfgSheet") closeCfg(); });
+if ($("pageSize")) $("pageSize").addEventListener("input", () => {
+  state.pageSize = Math.max(1000, Math.min(32000, Number($("pageSize").value) || 32000));
+  localStorage.setItem("ogcx_pageSize", String(state.pageSize));
+  paintPageSize();
+});
+if ($("gcBtn")) $("gcBtn").onclick = freeMemory;
+if ($("themePicks")) $("themePicks").addEventListener("click", (e) => {
+  const card = e.target.closest("[data-theme]");
+  if (card) applyTheme(card.dataset.theme);
+});
+$("sheetLoadAll").onclick = () => { $("fileSheet").classList.remove("open"); loadAll(); };
+$("sheetOfficial").onclick = () => window.open(CSV_OFFICIAL, "_blank");
+$("sheetPick").onclick = () => $("file").click();
+function goLive() {
+  if (state.mode === "live") {
+    reload(true);
+    return;
+  }
+  state.mode = "live";
+  state.diff = false;
+  $("diffBtn").classList.remove("on");
+  paintLiveBtn();
+  reload(true);
+}
+$("sheetLive").onclick = () => { $("fileSheet").classList.remove("open"); goLive(); };
+$("sheetCsv").onclick = () => { exportCsv(); };
+if ($("sheetCsvFav")) $("sheetCsvFav").onclick = () => { exportFavCsv(); };
+$("sheetDiff").onclick = () => { $("diffBtn").click(); };
+if ($("statsSimpleBtn")) $("statsSimpleBtn").onclick = () => showStats(!state.stats);
+if ($("auditSimpleBtn")) $("auditSimpleBtn").onclick = () => toggleAudit();
+$("pickBtn").onclick = () => $("file").click();
+$("file").onchange = () => {
+  const f = $("file").files[0]; if (!f) return;
+  ingestFile(f, state.diff && state.local.length > 0);
+};
+$("loadOfficial").onclick = () => window.open(CSV_OFFICIAL, "_blank");
+$("useLive").onclick = goLive;
+$("diffBtn").onclick = () => {
+  if (!state.local.length) { $("file").click(); return; }
+  if (!state.localB) {
+    alert(loc() === "fr" ? "Choisis une 2e capture CSV pour comparer." : "Pick a second snapshot CSV to compare.");
+    $("file").click();
+    return;
+  }
+  state.diff = !state.diff;
+  $("diffBtn").classList.toggle("on", state.diff);
+  renderRows();
+};
+const drop = $("drop");
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("hot"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("hot"); }));
+drop.addEventListener("drop", e => {
+  const f = e.dataTransfer.files[0]; if (f) ingestFile(f, state.diff && state.local.length > 0);
+});
+document.addEventListener("change", (e) => {
+  if (e.target && e.target.id === "orgSel") {
+    state.org = e.target.value;
+    reload(true);
+    return;
+  }
+  const org = e.target.closest("[data-org]");
+  if (!org) return;
+  state.org = org.checked ? org.dataset.org : "";
+  document.querySelectorAll("[data-org]").forEach(x => { if (x !== org) x.checked = false; });
+  reload(true);
+});
+
+applyTheme(state.theme);
+applyI18n();
+reload(true);
+</script>
+</body>
+</html>

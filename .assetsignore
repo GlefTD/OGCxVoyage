@@ -1,0 +1,10 @@
+# Gros datasets
+datasets
+datasets/**
+*.xml
+
+# Fichiers de config / source à ne pas servir
+wrangler.jsonc
+.gitignore
+.git/
+node_modules/
