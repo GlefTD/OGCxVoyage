@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<title>OGCx voyage — explorateur (v0.3.2)</title>
+<title>OGCx voyage — explorateur (v0.3.3)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -181,7 +181,7 @@ body.simple header {
   display: grid;
   grid-template-columns: 36px minmax(0,1fr) 36px 36px 36px 36px;
   grid-template-areas:
-    "s kpis kpis kpis file cfg"
+    "s kpis kpis kpis kpis cfg"
     "search search stats audit filt fav";
   padding: 6px 8px calc(6px + env(safe-area-inset-top));
   gap: 6px;
@@ -199,7 +199,7 @@ body.simple #statsSimpleBtn { grid-area: stats; display: inline-flex !important;
 body.simple #auditSimpleBtn { grid-area: audit; display: inline-flex !important; }
 body.simple #searchMenuBtn { grid-area: filt; }
 body.simple #favSimpleBtn { grid-area: fav; display: inline-flex !important; }
-body.simple #fileMenuBtn { grid-area: file; }
+body.simple #fileMenuBtn { display: none !important; }
 body.simple #cfgBtn { grid-area: cfg; display: inline-flex !important; }
 body.simple #searchwrap {
   grid-area: search; display: flex !important; width: 100%; max-width: none; min-width: 0;
@@ -360,6 +360,10 @@ body.simple #expandDetail { display: inline-flex; }
 .layout-card b { font-size: 12px; }
 .layout-card span { font-size: 11px; color: var(--muted); }
 body.simple #cfgFichePos { display: none; }
+.cfg-load { margin: 0 0 10px; }
+.cfg-load .bar { height: 6px; background: var(--track); border-radius: 99px; overflow: hidden; margin: 0 0 6px; }
+.cfg-load .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .12s linear; }
+.cfg-load .msg { margin: 0; min-height: 1.3em; }
 @media print {
   html, body, #app { background: #fff !important; color: #111 !important; height: auto; }
   header, footer, aside.filters, .split, .sheet, .iconbtn, .btn, #quickFilters { display: none !important; }
@@ -374,7 +378,7 @@ body.simple #cfgFichePos { display: none; }
 <div id="app">
   <header>
     <button class="btn iconbtn" id="simpleBtn" title="Mode simple">S</button>
-    <h1>OGC<span>x</span> voyage <span class="ver">v0.3.2</span></h1>
+    <h1>OGC<span>x</span> voyage <span class="ver">v0.3.3</span></h1>
     <div class="searchwrap" id="searchwrap">
       <input class="search" id="q" placeholder="Nom, destination, réf…" autocomplete="off">
       <button type="button" id="clearQ" class="hidden" title="Effacer">×</button>
@@ -534,17 +538,7 @@ body.simple #cfgFichePos { display: none; }
 <div class="sheet" id="fileSheet">
   <div class="panel">
     <div class="panel-h"><h2 id="fileSheetLab">Fichiers</h2><span class="grow"></span><button class="btn" id="closeFile">×</button></div>
-    <div class="panel-b">
-      <button class="btn wide primary" id="sheetLoadAll">Tout charger</button>
-      <button class="btn wide" id="sheetOfficial">Télécharger officiel</button>
-      <button class="btn wide" id="sheetPick">Choisir une capture</button>
-      <button class="btn wide live" id="sheetLive">Live Database</button>
-      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
-      <button class="btn wide primary" id="sheetCsv">CSV filtré</button>
-      <button class="btn wide" id="sheetCsvFav">CSV favoris</button>
-      <button class="btn wide" id="sheetDiff">Diff</button>
-      <p class="hint" id="fileHint">Captures CSV, live, et export de la vue filtrée.</p>
-    </div>
+    <div class="panel-b"><p class="hint" id="fileSheetMoved">Déplacé dans Config.</p></div>
   </div>
 </div>
 <div class="sheet" id="filterSheet">
@@ -588,6 +582,22 @@ body.simple #cfgFichePos { display: none; }
           </button>
         </div>
         <p class="hint" id="fichePosHint">Interface standard seulement. Sous 1200 px, la fiche passe automatiquement au bas.</p>
+      </div>
+      <div class="cfg-row" id="cfgFiles">
+        <h2 id="hFiles">Fichiers</h2>
+        <div class="cfg-load" id="cfgLoadBox">
+          <div class="bar" id="cfgProg"><i id="cfgProgI"></i></div>
+          <p class="hint msg" id="cfgLoadMsg"></p>
+        </div>
+        <button class="btn wide primary" id="sheetLoadAll">Tout charger</button>
+        <button class="btn wide" id="sheetOfficial">Télécharger officiel</button>
+        <button class="btn wide" id="sheetPick">Choisir une capture</button>
+        <button class="btn wide live" id="sheetLive">Live Database</button>
+        <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+        <button class="btn wide primary" id="sheetCsv">CSV filtré</button>
+        <button class="btn wide" id="sheetCsvFav">CSV favoris</button>
+        <button class="btn wide" id="sheetDiff">Diff</button>
+        <p class="hint" id="fileHint">Captures CSV, live, et export de la vue filtrée.</p>
       </div>
       <div class="cfg-row">
         <h2 id="hLoadSet">Chargement</h2>
@@ -672,6 +682,8 @@ const I18N = {
     fichePosRightHint: "à droite de la grille",
     fichePosBottomHint: "sous la grille",
     fichePosHint: "Interface standard seulement. Sous 1200 px, la fiche passe automatiquement au bas.",
+    files: "Fichiers",
+    fileHint: "Captures CSV, live, et export de la vue filtrée.",
     loadSet: "Chargement",
     pageSize: "Taille des blocs",
     pageSizeHint: "Plus petit = barre plus fluide. Plus grand = moins d’appels API. Max CKAN 32 000.",
@@ -751,6 +763,8 @@ const I18N = {
     fichePosRightHint: "to the right of the grid",
     fichePosBottomHint: "below the grid",
     fichePosHint: "Standard interface only. Under 1200 px the pane docks automatically at the bottom.",
+    files: "Files",
+    fileHint: "CSV snapshots, live, and filtered export.",
     loadSet: "Loading",
     pageSize: "Block size",
     pageSizeHint: "Smaller = smoother progress. Larger = fewer API calls. CKAN max 32,000.",
@@ -846,8 +860,11 @@ function etaLabel(sec) {
   return `${t("eta")} ${Math.round(sec / 60)} min`;
 }
 function setProg(frac, msg) {
-  if ($("progI")) $("progI").style.width = Math.max(0, Math.min(100, Math.round((frac || 0) * 100))) + "%";
+  const pct = Math.max(0, Math.min(100, Math.round((frac || 0) * 100)));
+  if ($("progI")) $("progI").style.width = pct + "%";
+  if ($("cfgProgI")) $("cfgProgI").style.width = pct + "%";
   if (msg && $("status")) $("status").textContent = msg;
+  if (msg && $("cfgLoadMsg")) $("cfgLoadMsg").textContent = msg;
 }
 
 async function ckan(action, params) {
@@ -868,8 +885,13 @@ async function ckan(action, params) {
 
 function setBusy(on, msg) {
   state.loading = on;
-  $("status").textContent = msg || (on ? t("loading") : t("ready"));
-  if (!on && !state.audit) $("progI").style.width = "0";
+  const text = msg || (on ? t("loading") : t("ready"));
+  if ($("status")) $("status").textContent = text;
+  if ($("cfgLoadMsg")) $("cfgLoadMsg").textContent = text;
+  ["sheetLoadAll", "loadAllBtn"].forEach((id) => { if ($(id)) $(id).disabled = !!on; });
+  if (!on && !state.audit) {
+    if ($("progI")) $("progI").style.width = "0";
+  }
 }
 
 function paintLiveBtn() {
@@ -976,6 +998,10 @@ function applyI18n() {
   if ($("fichePosRightHint")) $("fichePosRightHint").textContent = t("fichePosRightHint");
   if ($("fichePosBottomHint")) $("fichePosBottomHint").textContent = t("fichePosBottomHint");
   if ($("fichePosHint")) $("fichePosHint").textContent = t("fichePosHint");
+  if ($("hFiles")) $("hFiles").textContent = t("files");
+  if ($("fileHint")) $("fileHint").textContent = t("fileHint");
+  if ($("fileSheetLab")) $("fileSheetLab").textContent = t("files");
+  if ($("sheetLoadAll")) $("sheetLoadAll").textContent = t("all");
   if ($("hLoadSet")) $("hLoadSet").textContent = t("loadSet");
   if ($("labPageSize")) $("labPageSize").textContent = t("pageSize");
   if ($("pageSizeHint")) $("pageSizeHint").textContent = t("pageSizeHint");
@@ -1521,16 +1547,30 @@ $("rows").onclick = (e) => {
   const on = $("rows").querySelector(".row.on");
   if (on) on.scrollIntoView({ block: "nearest", behavior: "smooth" });
 };
-$("simpleBtn").onclick = () => {
-  document.body.classList.toggle("simple");
-  $("simpleBtn").classList.toggle("on", document.body.classList.contains("simple"));
-  if (!document.body.classList.contains("simple")) {
+function isPhoneDevice() {
+  const ua = navigator.userAgent || "";
+  const iPadOS = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  const tablet = iPadOS || /iPad|Tablet|PlayBook|Silk|(Android(?!.*Mobile))/i.test(ua);
+  if (tablet) return false;
+  const phoneUA = /iPhone|iPod|Android.+Mobile|Windows Phone|BlackBerry|webOS|IEMobile|Opera Mini/i.test(ua);
+  const narrow = Math.min(window.innerWidth || 9999, (screen && screen.width) || 9999) < 700;
+  const coarse = window.matchMedia && matchMedia("(pointer: coarse)").matches && matchMedia("(hover: none)").matches;
+  return !!(phoneUA || (coarse && narrow));
+}
+function applySimple(on, persist) {
+  document.body.classList.toggle("simple", !!on);
+  if ($("simpleBtn")) $("simpleBtn").classList.toggle("on", !!on);
+  if (persist) localStorage.setItem("ogcx_simple", on ? "1" : "0");
+  if (!on) {
     closeFilters();
-    $("fileSheet").classList.remove("open");
+    if ($("fileSheet")) $("fileSheet").classList.remove("open");
     closeCfg();
     closeFiche();
   }
   applyFichePos();
+}
+$("simpleBtn").onclick = () => {
+  applySimple(!document.body.classList.contains("simple"), true);
 };
 if ($("favSimpleBtn")) $("favSimpleBtn").onclick = () => {
   state.favOnly = !state.favOnly;
@@ -2037,7 +2077,7 @@ if ($("fichePosPicks")) $("fichePosPicks").addEventListener("click", (e) => {
   const card = e.target.closest("[data-fichepos]");
   if (card) applyFichePos(card.dataset.fichepos);
 });
-$("sheetLoadAll").onclick = () => { $("fileSheet").classList.remove("open"); loadAll(); };
+$("sheetLoadAll").onclick = () => { loadAll(); };
 $("sheetOfficial").onclick = () => window.open(CSV_OFFICIAL, "_blank");
 $("sheetPick").onclick = () => $("file").click();
 function goLive() {
@@ -2051,7 +2091,7 @@ function goLive() {
   paintLiveBtn();
   reload(true);
 }
-$("sheetLive").onclick = () => { $("fileSheet").classList.remove("open"); goLive(); };
+$("sheetLive").onclick = () => { goLive(); };
 $("sheetCsv").onclick = () => { exportCsv(); };
 if ($("sheetCsvFav")) $("sheetCsvFav").onclick = () => { exportFavCsv(); };
 $("sheetDiff").onclick = () => { $("diffBtn").click(); };
@@ -2095,6 +2135,12 @@ document.addEventListener("change", (e) => {
 });
 
 applyTheme(state.theme);
+(function bootSimple() {
+  const saved = localStorage.getItem("ogcx_simple");
+  const on = saved === "1" ? true : saved === "0" ? false : isPhoneDevice();
+  document.body.classList.toggle("simple", on);
+  if ($("simpleBtn")) $("simpleBtn").classList.toggle("on", on);
+})();
 applyFichePos();
 applyI18n();
 reload(true);
