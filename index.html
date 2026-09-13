@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<title>OGCx voyage — explorateur (v0.3.0)</title>
+<title>OGCx voyage — explorateur (v0.3.2)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
 :root, html[data-theme="darkblue"] {
   --bg: #0b1014; --bg2: #121a21; --bg3: #18232c; --line: #2a3a46;
   --text: #e7eef3; --muted: #8aa0ae; --accent: #e2b657; --accent2: #6fc3b2;
-  --danger: #e07a6a; --ok: #7dce8a; --row: 34px; --aside: 280px; --detail: 400px;
+  --danger: #e07a6a; --ok: #7dce8a; --row: 34px; --aside: 280px; --detail: 400px; --ficheH: 280px;
   --grid: 28px 118px minmax(140px,1.4fr) 88px 92px minmax(120px,1fr);
   --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -68,7 +68,7 @@ header h1 .ver { color: var(--muted); font-size: 10px; font-weight: 500; text-tr
 .iconbtn { min-width: 44px; height: 40px; padding: 0 8px; font-size: 18px; }
 .kpis { display: flex; gap: 18px; font-variant-numeric: tabular-nums; margin-left: auto; white-space: nowrap; }
 .kpis b { color: var(--accent); font-weight: 650; }
-main { display: grid; grid-template-columns: var(--aside) 6px 1fr 6px var(--detail); min-height: 0; }
+main { display: grid; grid-template-columns: var(--aside) 6px 1fr 6px var(--detail); grid-template-rows: minmax(0,1fr); min-height: 0; }
 .split { background: var(--line); cursor: col-resize; }
 .split:hover, .split.hot { background: var(--accent); }
 aside.filters, .detail { background: var(--bg2); min-height: 0; display: flex; flex-direction: column; }
@@ -153,9 +153,25 @@ footer #status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-
 .sheet .panel-h { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
 .sheet .panel-b { overflow: auto; flex: 1; padding: 12px 14px; }
 @media (max-width: 1200px) {
-  main { grid-template-columns: var(--aside) 6px 1fr; }
-  .split.d, .detail { display: none; }
-  .detail.open { display: flex; position: absolute; inset: 56px 0 28px auto; width: min(var(--detail),100%); z-index: 8; }
+  /* fallback if JS n’a pas encore posé fiche-bottom */
+  body:not(.simple):not(.fiche-bottom) main { grid-template-columns: var(--aside) 6px 1fr; }
+}
+body.fiche-bottom:not(.simple) main {
+  grid-template-columns: var(--aside) 6px minmax(0,1fr);
+  grid-template-rows: minmax(120px,1fr) 6px var(--ficheH);
+}
+body.fiche-bottom:not(.simple) aside.filters { grid-column: 1; grid-row: 1 / -1; }
+body.fiche-bottom:not(.simple) #splitL { grid-column: 2; grid-row: 1 / -1; }
+body.fiche-bottom:not(.simple) #center { grid-column: 3; grid-row: 1; min-width: 0; min-height: 0; }
+body.fiche-bottom:not(.simple) #splitR {
+  grid-column: 3; grid-row: 2;
+  cursor: row-resize; width: auto; min-height: 6px;
+}
+body.fiche-bottom:not(.simple) .detail {
+  grid-column: 3; grid-row: 3;
+  display: flex; position: static; width: auto; height: auto;
+  min-height: 0; min-width: 0;
+  border-left: 0; border-top: 1px solid var(--line);
 }
 body.simple .simple-only { display: inline-flex; }
 body.simple header h1, body.simple header .desk-only, body.simple header .grow { display: none !important; }
@@ -163,19 +179,20 @@ body.simple #app { grid-template-rows: auto 1fr; }
 body.simple footer { display: none; }
 body.simple header {
   display: grid;
-  grid-template-columns: 40px 1fr 44px 44px 44px 44px 44px 44px;
+  grid-template-columns: 36px minmax(0,1fr) 36px 36px 36px 36px;
   grid-template-areas:
-    "s kpis stats audit filt fav file cfg"
-    "search search search qf qf qf qf qf";
-  padding: 8px 8px calc(8px + env(safe-area-inset-top));
+    "s kpis kpis kpis file cfg"
+    "search search stats audit filt fav";
+  padding: 6px 8px calc(6px + env(safe-area-inset-top));
   gap: 6px;
   background: var(--head);
   min-height: 0;
   position: sticky; top: 0; z-index: 30;
+  align-items: center;
 }
 body.simple #simpleBtn { grid-area: s; }
-body.simple .kpis { grid-area: kpis; justify-self: center; font-size: 12px; margin-left: 0; }
-body.simple .kpis b { font-size: 15px; }
+body.simple .kpis { grid-area: kpis; justify-self: start; font-size: 11px; margin-left: 0; gap: 10px; }
+body.simple .kpis b { font-size: 14px; }
 body.simple header .kpis .desk-only { display: flex !important; }
 body.simple header .gap { display: none !important; }
 body.simple #statsSimpleBtn { grid-area: stats; display: inline-flex !important; }
@@ -184,15 +201,13 @@ body.simple #searchMenuBtn { grid-area: filt; }
 body.simple #favSimpleBtn { grid-area: fav; display: inline-flex !important; }
 body.simple #fileMenuBtn { grid-area: file; }
 body.simple #cfgBtn { grid-area: cfg; display: inline-flex !important; }
-body.simple #searchwrap { grid-area: search; display: flex !important; width: 100%; max-width: none; }
-body.simple .search { width: 100%; min-height: 40px; border-radius: 10px; font-size: 16px; }
-body.simple #quickFilters {
-  grid-area: qf; display: flex !important; justify-content: flex-end; align-items: center; gap: 6px;
+body.simple #searchwrap {
+  grid-area: search; display: flex !important; width: 100%; max-width: none; min-width: 0;
 }
-body.simple #quickFilters select {
-  width: auto; min-width: 0; max-width: 42vw; height: 40px; border-radius: 10px; padding: 0 8px; font-size: 12px;
-}
-body.simple main { grid-template-columns: 1fr; }
+body.simple .search { width: 100%; min-height: 36px; height: 36px; border-radius: 10px; font-size: 16px; }
+body.simple #quickFilters { display: none !important; }
+body.simple header .iconbtn { min-width: 36px; width: 36px; height: 36px; padding: 0; border-radius: 10px; }
+body.simple main { grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr); }
 body.simple aside.filters, body.simple .split { display: none !important; }
 body.simple #cols { display: none; }
 .simple-cols { display: none; }
@@ -275,16 +290,31 @@ body.simple .detail.open {
   border: 0; border-top: 1px solid var(--line);
   border-radius: 14px 14px 0 0; box-shadow: 0 -12px 40px rgba(0,0,0,.45);
   padding-bottom: env(safe-area-inset-bottom);
+  touch-action: pan-y;
+  transition: transform .18s ease-out;
 }
-body.simple .detail.open.full { height: 88vh; max-height: 88vh; z-index: 20; }
+body.simple .detail.open.full { top: 0; height: auto; max-height: none; border-radius: 0; z-index: 28; }
 body.simple.fiche-open #scroller, body.simple.fiche-open #statsView { padding-bottom: calc(50vh + 10px); }
-body.simple.fiche-open.fiche-full #scroller, body.simple.fiche-open.fiche-full #statsView { padding-bottom: calc(88vh + 10px); }
-body.simple .detail-head { position: sticky; top: 0; background: var(--bg2); z-index: 2; padding-top: 2px; flex-wrap: wrap; }
-body.simple .grab { width: 100%; height: 16px; background: transparent; order: -1; flex-basis: 100%; }
-body.simple .grab::after { content: ""; display: block; width: 40px; height: 5px; border-radius: 99px; background: var(--grab); margin: 6px auto 0; }
+body.simple.fiche-open.fiche-full #scroller, body.simple.fiche-open.fiche-full #statsView { padding-bottom: 0; }
+body.simple .detail-head {
+  position: sticky; top: 0; background: var(--bg2); z-index: 2;
+  padding-top: 4px; flex-wrap: nowrap; align-items: center; gap: 6px;
+  touch-action: none; user-select: none;
+}
+body.simple .detail-head h2 { padding: 4px 4px; margin: 0; letter-spacing: .12em; }
+body.simple .grab { display: none !important; }
 body.simple .detail h3 { font-size: 18px; }
-body.simple .iconbtn { min-width: 44px; height: 44px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; }
-body.simple .iconbtn svg { width: 20px; height: 20px; display: block; }
+body.simple .iconbtn { min-width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; }
+body.simple .detail-tools { gap: 4px; flex-shrink: 0; }
+body.simple .detail-tools .btn {
+  min-width: 0; height: 32px; min-height: 32px; padding: 0 8px;
+  font-size: 12px; border-radius: 8px;
+}
+body.simple .detail-tools .iconbtn { min-width: 32px; width: 32px; height: 32px; }
+body.simple .iconbtn svg { width: 18px; height: 18px; display: block; }
+body.simple #detailBody { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+body.simple #scroller { -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+body.simple .row { touch-action: pan-y; transition: transform .12s ease-out; }
 body.simple #rows { padding-bottom: 24px; }
 body.simple .sheet {
   align-items: flex-start;
@@ -314,6 +344,22 @@ body.simple #expandDetail { display: inline-flex; }
 .theme-card .sw.lightred { background: linear-gradient(90deg, #ffffff 40%, #c8102e 40% 55%, #fff7f7 55%); }
 .theme-card b { font-size: 12px; }
 .theme-card span { font-size: 11px; color: var(--muted); }
+.layout-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.layout-card {
+  display: flex; flex-direction: column; gap: 6px; align-items: stretch;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px;
+  text-align: left; color: var(--text);
+}
+.layout-card:hover { border-color: var(--accent); }
+.layout-card.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.layout-card .sw { height: 36px; border-radius: 4px; border: 1px solid var(--line); position: relative; overflow: hidden; background: var(--bg3); }
+.layout-card .sw.right::before { content: ""; position: absolute; inset: 4px 4px 4px 4px; background: var(--bg); border: 1px solid var(--line); }
+.layout-card .sw.right::after { content: ""; position: absolute; top: 4px; right: 4px; bottom: 4px; width: 28%; background: var(--accent); opacity: .85; }
+.layout-card .sw.bottom::before { content: ""; position: absolute; inset: 4px 4px 4px 4px; background: var(--bg); border: 1px solid var(--line); }
+.layout-card .sw.bottom::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: 4px; height: 38%; background: var(--accent); opacity: .85; }
+.layout-card b { font-size: 12px; }
+.layout-card span { font-size: 11px; color: var(--muted); }
+body.simple #cfgFichePos { display: none; }
 @media print {
   html, body, #app { background: #fff !important; color: #111 !important; height: auto; }
   header, footer, aside.filters, .split, .sheet, .iconbtn, .btn, #quickFilters { display: none !important; }
@@ -328,7 +374,7 @@ body.simple #expandDetail { display: inline-flex; }
 <div id="app">
   <header>
     <button class="btn iconbtn" id="simpleBtn" title="Mode simple">S</button>
-    <h1>OGC<span>x</span> voyage <span class="ver">v0.3.0</span></h1>
+    <h1>OGC<span>x</span> voyage <span class="ver">v0.3.2</span></h1>
     <div class="searchwrap" id="searchwrap">
       <input class="search" id="q" placeholder="Nom, destination, réf…" autocomplete="off">
       <button type="button" id="clearQ" class="hidden" title="Effacer">×</button>
@@ -467,7 +513,7 @@ body.simple #expandDetail { display: inline-flex; }
     <aside class="detail pad" id="detail">
       <div class="detail-head">
         <div class="grab"></div>
-        <h2 id="ficheLab">Fiche</h2>
+        <h2 id="ficheLab" title="Glisser : haut plein écran · bas fermer">Fiche</h2>
         <div class="detail-tools">
           <button class="btn" id="copyBtn">Copier</button>
           <button class="btn" id="starBtn">Favori</button>
@@ -526,6 +572,22 @@ body.simple #expandDetail { display: inline-flex; }
           </button>
         </div>
         <p class="hint" id="appearHint">LightRed = rouge et blanc, lisible à l’impression.</p>
+      </div>
+      <div class="cfg-row" id="cfgFichePos">
+        <h2 id="hFichePos">Position de la fiche</h2>
+        <div class="layout-picks" id="fichePosPicks">
+          <button type="button" class="layout-card on" data-fichepos="right" id="fichePosRight">
+            <i class="sw right"></i>
+            <b id="fichePosRightLab">À droite</b>
+            <span id="fichePosRightHint">à droite de la grille</span>
+          </button>
+          <button type="button" class="layout-card" data-fichepos="bottom" id="fichePosBottom">
+            <i class="sw bottom"></i>
+            <b id="fichePosBottomLab">Au bas</b>
+            <span id="fichePosBottomHint">sous la grille</span>
+          </button>
+        </div>
+        <p class="hint" id="fichePosHint">Interface standard seulement. Sous 1200 px, la fiche passe automatiquement au bas.</p>
       </div>
       <div class="cfg-row">
         <h2 id="hLoadSet">Chargement</h2>
@@ -604,6 +666,12 @@ const I18N = {
     appearHint: "LightRed = rouge et blanc, lisible à l’impression.",
     themeDarkHint: "bleu nuit · écran",
     themeLightHint: "Canada · impression",
+    fichePos: "Position de la fiche",
+    fichePosRight: "À droite",
+    fichePosBottom: "Au bas",
+    fichePosRightHint: "à droite de la grille",
+    fichePosBottomHint: "sous la grille",
+    fichePosHint: "Interface standard seulement. Sous 1200 px, la fiche passe automatiquement au bas.",
     loadSet: "Chargement",
     pageSize: "Taille des blocs",
     pageSizeHint: "Plus petit = barre plus fluide. Plus grand = moins d’appels API. Max CKAN 32 000.",
@@ -677,6 +745,12 @@ const I18N = {
     appearHint: "LightRed = red and white, easy to print.",
     themeDarkHint: "night blue · screen",
     themeLightHint: "Canada · print",
+    fichePos: "Record pane position",
+    fichePosRight: "Right",
+    fichePosBottom: "Bottom",
+    fichePosRightHint: "to the right of the grid",
+    fichePosBottomHint: "below the grid",
+    fichePosHint: "Standard interface only. Under 1200 px the pane docks automatically at the bottom.",
     loadSet: "Loading",
     pageSize: "Block size",
     pageSizeHint: "Smaller = smoother progress. Larger = fewer API calls. CKAN max 32,000.",
@@ -721,6 +795,7 @@ const state = {
   loading: false,
   loadSeq: 0,
   theme: (localStorage.getItem("ogcx_theme") === "lightred" ? "lightred" : "darkblue"),
+  fichePos: (localStorage.getItem("ogcx_fichePos") === "bottom" ? "bottom" : "right"),
   pageSize: (function () {
     const raw = localStorage.getItem("ogcx_pageSize");
     const n = Number(raw);
@@ -895,6 +970,12 @@ function applyI18n() {
   if ($("appearHint")) $("appearHint").textContent = t("appearHint");
   if ($("themeDarkHint")) $("themeDarkHint").textContent = t("themeDarkHint");
   if ($("themeLightHint")) $("themeLightHint").textContent = t("themeLightHint");
+  if ($("hFichePos")) $("hFichePos").textContent = t("fichePos");
+  if ($("fichePosRightLab")) $("fichePosRightLab").textContent = t("fichePosRight");
+  if ($("fichePosBottomLab")) $("fichePosBottomLab").textContent = t("fichePosBottom");
+  if ($("fichePosRightHint")) $("fichePosRightHint").textContent = t("fichePosRightHint");
+  if ($("fichePosBottomHint")) $("fichePosBottomHint").textContent = t("fichePosBottomHint");
+  if ($("fichePosHint")) $("fichePosHint").textContent = t("fichePosHint");
   if ($("hLoadSet")) $("hLoadSet").textContent = t("loadSet");
   if ($("labPageSize")) $("labPageSize").textContent = t("pageSize");
   if ($("pageSizeHint")) $("pageSizeHint").textContent = t("pageSizeHint");
@@ -1449,6 +1530,7 @@ $("simpleBtn").onclick = () => {
     closeCfg();
     closeFiche();
   }
+  applyFichePos();
 };
 if ($("favSimpleBtn")) $("favSimpleBtn").onclick = () => {
   state.favOnly = !state.favOnly;
@@ -1456,25 +1538,150 @@ if ($("favSimpleBtn")) $("favSimpleBtn").onclick = () => {
   $("favOnlyBtn").classList.toggle("on", state.favOnly);
   renderRows();
 };
-(function bindDetailSwipe() {
+function setFicheFull(on) {
   const el = $("detail");
-  let y0 = 0, dy = 0, on = false;
-  el.addEventListener("touchstart", (e) => {
-    if (!document.body.classList.contains("simple") || !el.classList.contains("open")) return;
-    y0 = e.touches[0].clientY;
-    dy = 0; on = true;
-  }, { passive: true });
-  el.addEventListener("touchmove", (e) => {
-    if (!on) return;
-    dy = e.touches[0].clientY - y0;
-    if (dy > 0 && el.scrollTop < 4) el.style.transform = `translateY(${Math.min(dy, 240)}px)`;
-  }, { passive: true });
-  el.addEventListener("touchend", () => {
-    if (!on) return;
-    on = false;
-    el.style.transform = "";
-    if (dy > 90) closeFiche();
+  if (!el) return;
+  el.classList.toggle("full", !!on);
+  document.body.classList.toggle("fiche-full", !!(on && el.classList.contains("open") && document.body.classList.contains("simple")));
+  const btn = $("expandDetail");
+  if (btn) {
+    btn.classList.toggle("on", !!on);
+    btn.textContent = on ? "▾" : "▴";
+    btn.title = on ? t("tipExpand") : t("tipExpand");
+  }
+}
+function distTouches(a, b) {
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+(function wireSimpleGestures() {
+  const detail = $("detail");
+  const handle = $("ficheLab") || (detail && detail.querySelector(".detail-head"));
+  const rows = $("rows");
+  if (!detail || !rows) return;
+  let suppressClick = false;
+  function isSimple() { return document.body.classList.contains("simple"); }
+  function track(el, opts) {
+    if (!el) return;
+    let sx = 0, sy = 0, x = 0, y = 0, active = false, locked = "";
+    el.addEventListener("touchstart", (e) => {
+      if (!isSimple() || e.touches.length !== 1) return;
+      if (opts.needOpen && !detail.classList.contains("open")) return;
+      if (opts.ignoreBtn && e.target.closest("button, a, input, select")) return;
+      const t = e.touches[0];
+      sx = x = t.clientX; sy = y = t.clientY;
+      active = true; locked = "";
+    }, { passive: true });
+    el.addEventListener("touchmove", (e) => {
+      if (!active || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      x = t.clientX; y = t.clientY;
+      const dx = x - sx, dy = y - sy;
+      if (!locked && (Math.abs(dx) > 12 || Math.abs(dy) > 12)) {
+        locked = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      }
+      if (locked === "x" && opts.onX) { e.preventDefault(); opts.onX(dx, dy); }
+      else if (locked === "y" && opts.onY) { e.preventDefault(); opts.onY(dx, dy); }
+    }, { passive: false });
+    const end = () => {
+      if (!active) return;
+      const dx = x - sx, dy = y - sy;
+      const axis = locked;
+      active = false; locked = "";
+      if (opts.onEnd) opts.onEnd(dx, dy, axis);
+    };
+    el.addEventListener("touchend", end);
+    el.addEventListener("touchcancel", end);
+  }
+  track(handle, {
+    needOpen: true,
+    onY: (dx, dy) => { detail.style.transition = "none"; detail.style.transform = "translateY(" + Math.max(-40, dy) + "px)"; },
+    onEnd: (dx, dy, axis) => {
+      detail.style.transition = "";
+      detail.style.transform = "";
+      if (axis !== "y") return;
+      if (dy < -56) setFicheFull(true);
+      else if (dy > 56) closeFiche();
+    }
   });
+  track(detail, {
+    needOpen: true,
+    ignoreBtn: true,
+    onX: (dx) => {
+      if (dx > 0) return;
+      detail.style.transition = "none";
+      detail.style.transform = "translateX(" + dx + "px)";
+    },
+    onEnd: (dx, dy, axis) => {
+      detail.style.transition = "";
+      detail.style.transform = "";
+      if (axis === "x" && dx < -72) closeFiche();
+    }
+  });
+  let rsx = 0, rsy = 0, rax = "", rrow = null, rlive = false;
+  rows.addEventListener("touchstart", (e) => {
+    if (!isSimple() || e.touches.length !== 1) return;
+    const row = e.target.closest(".row");
+    if (!row) return;
+    rrow = row; rsx = e.touches[0].clientX; rsy = e.touches[0].clientY; rax = ""; rlive = true;
+  }, { passive: true });
+  rows.addEventListener("touchmove", (e) => {
+    if (!rlive || !rrow || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - rsx;
+    const dy = e.touches[0].clientY - rsy;
+    if (!rax && (Math.abs(dx) > 12 || Math.abs(dy) > 12)) rax = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    if (rax === "x") {
+      e.preventDefault();
+      rrow.style.transition = "none";
+      rrow.style.transform = "translateX(" + dx + "px)";
+    }
+  }, { passive: false });
+  const rowEnd = () => {
+    if (!rlive) return;
+    const row = rrow;
+    rlive = false;
+    if (row) {
+      const m = /translateX\((-?\d+(?:\.\d+)?)px\)/.exec(row.style.transform || "");
+      const ddx = m ? parseFloat(m[1]) : 0;
+      row.style.transition = "";
+      row.style.transform = "";
+      if (rax === "x" && ddx > 72) {
+        suppressClick = true;
+        state.selected = findRow(row.dataset.k);
+        renderRows();
+        renderDetail(state.selected);
+        setFicheFull(true);
+      } else if (rax === "x" && ddx < -72) {
+        suppressClick = true;
+        if (detail.classList.contains("open")) closeFiche();
+      }
+    }
+    rrow = null; rax = "";
+  };
+  rows.addEventListener("touchend", rowEnd);
+  rows.addEventListener("touchcancel", rowEnd);
+  rows.addEventListener("click", (e) => {
+    if (suppressClick) { e.preventDefault(); e.stopPropagation(); suppressClick = false; }
+  }, true);
+  let pinching = false, p0 = 0, p1 = 0;
+  detail.addEventListener("touchstart", (e) => {
+    if (!isSimple() || !detail.classList.contains("open") || e.touches.length !== 2) return;
+    pinching = true;
+    p0 = p1 = distTouches(e.touches[0], e.touches[1]);
+  }, { passive: true });
+  detail.addEventListener("touchmove", (e) => {
+    if (!pinching || e.touches.length !== 2) return;
+    e.preventDefault();
+    p1 = distTouches(e.touches[0], e.touches[1]);
+  }, { passive: false });
+  const pinchEnd = () => {
+    if (!pinching) return;
+    const ratio = p0 ? p1 / p0 : 1;
+    if (ratio > 1.16) setFicheFull(true);
+    else if (ratio < 0.86) setFicheFull(false);
+    pinching = false;
+  };
+  detail.addEventListener("touchend", pinchEnd);
+  detail.addEventListener("touchcancel", pinchEnd);
 })();
 if ($("auditBtn")) $("auditBtn").onclick = () => toggleAudit();
 if ($("errOnly")) $("errOnly").onchange = () => {
@@ -1639,16 +1846,20 @@ function bindSplit(el, key) {
   el.addEventListener("mousedown", (e) => {
     e.preventDefault();
     el.classList.add("hot");
-    const start = e.clientX;
+    const vert = key === "detail" && document.body.classList.contains("fiche-bottom");
+    const start = vert ? e.clientY : e.clientX;
     const aside0 = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--aside")) || 280;
     const detail0 = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--detail")) || 400;
+    const fiche0 = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ficheH")) || 280;
     const move = (ev) => {
-      const dx = ev.clientX - start;
       if (key === "aside") {
-        const w = Math.max(180, Math.min(560, aside0 + dx));
+        const w = Math.max(180, Math.min(560, aside0 + (ev.clientX - start)));
         document.documentElement.style.setProperty("--aside", w + "px");
+      } else if (vert) {
+        const h = Math.max(140, Math.min(Math.round(window.innerHeight * 0.72), fiche0 - (ev.clientY - start)));
+        document.documentElement.style.setProperty("--ficheH", h + "px");
       } else {
-        const w = Math.max(240, Math.min(720, detail0 - dx));
+        const w = Math.max(240, Math.min(720, detail0 - (ev.clientX - start)));
         document.documentElement.style.setProperty("--detail", w + "px");
       }
     };
@@ -1658,6 +1869,7 @@ function bindSplit(el, key) {
       window.removeEventListener("mouseup", up);
       localStorage.setItem("ogcx_aside", getComputedStyle(document.documentElement).getPropertyValue("--aside").trim());
       localStorage.setItem("ogcx_detail", getComputedStyle(document.documentElement).getPropertyValue("--detail").trim());
+      localStorage.setItem("ogcx_ficheH", getComputedStyle(document.documentElement).getPropertyValue("--ficheH").trim());
     };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
@@ -1668,8 +1880,10 @@ bindSplit($("splitR"), "detail");
 (function restoreSplits() {
   const a = localStorage.getItem("ogcx_aside");
   const d = localStorage.getItem("ogcx_detail");
+  const h = localStorage.getItem("ogcx_ficheH");
   if (a) document.documentElement.style.setProperty("--aside", a);
   if (d) document.documentElement.style.setProperty("--detail", d);
+  if (h) document.documentElement.style.setProperty("--ficheH", h);
 })();
 function flipLang() {
   state.lang = state.lang === "fr" ? "en" : "fr";
@@ -1719,15 +1933,14 @@ function copyFiche() {
 $("copyBtn").onclick = copyFiche;
 $("csvBtn").onclick = exportCsv;
 function closeFiche() {
+  const el = $("detail");
+  if (el) el.style.transform = "";
   $("detail").classList.remove("open", "full");
   document.body.classList.remove("fiche-open", "fiche-full");
+  setFicheFull(false);
 }
 $("closeDetail").onclick = closeFiche;
-if ($("expandDetail")) $("expandDetail").onclick = () => {
-  const on = $("detail").classList.toggle("full");
-  document.body.classList.toggle("fiche-full", on);
-  $("expandDetail").textContent = on ? "▾" : "▴";
-};
+if ($("expandDetail")) $("expandDetail").onclick = () => setFicheFull(!$("detail").classList.contains("full"));
 function parkFilters() {
   const home = $("aside").querySelector(".aside-body");
   const block = $("filterBlock");
@@ -1763,6 +1976,20 @@ function applyTheme(name) {
     el.classList.toggle("on", el.dataset.theme === theme);
   });
 }
+function applyFichePos(pref) {
+  if (pref === "bottom" || pref === "right") {
+    state.fichePos = pref;
+    localStorage.setItem("ogcx_fichePos", pref);
+  }
+  const wantBottom = state.fichePos === "bottom";
+  const autoBottom = !document.body.classList.contains("simple") && window.innerWidth < 1200;
+  const dockBottom = !document.body.classList.contains("simple") && (wantBottom || autoBottom);
+  document.body.classList.toggle("fiche-bottom", dockBottom);
+  document.querySelectorAll("[data-fichepos]").forEach((el) => {
+    el.classList.toggle("on", el.dataset.fichepos === state.fichePos);
+  });
+}
+window.addEventListener("resize", () => applyFichePos());
 function paintPageSize() {
   if ($("pageSizeVal")) $("pageSizeVal").textContent = fmtN(state.pageSize);
   if ($("pageSize")) $("pageSize").value = String(state.pageSize);
@@ -1805,6 +2032,10 @@ if ($("gcBtn")) $("gcBtn").onclick = freeMemory;
 if ($("themePicks")) $("themePicks").addEventListener("click", (e) => {
   const card = e.target.closest("[data-theme]");
   if (card) applyTheme(card.dataset.theme);
+});
+if ($("fichePosPicks")) $("fichePosPicks").addEventListener("click", (e) => {
+  const card = e.target.closest("[data-fichepos]");
+  if (card) applyFichePos(card.dataset.fichepos);
 });
 $("sheetLoadAll").onclick = () => { $("fileSheet").classList.remove("open"); loadAll(); };
 $("sheetOfficial").onclick = () => window.open(CSV_OFFICIAL, "_blank");
@@ -1864,6 +2095,7 @@ document.addEventListener("change", (e) => {
 });
 
 applyTheme(state.theme);
+applyFichePos();
 applyI18n();
 reload(true);
 </script>
